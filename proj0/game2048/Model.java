@@ -113,22 +113,56 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.setViewingPerspective(side);
+        boolean[] changesCol= new boolean[board.size()];
         for (int c = 0; c < board.size(); c += 1) {
-            for (int r = 0; r < board.size(); r += 1) {
-                Tile t = board.tile(c, r);
-                if (board.tile(c, r) != null) {
-                    board.move(c, 3, t);
-                    changed = true;
-                    score += 7;
-                }
-            }
+            changesCol[c] = mutateEachCol(c);
         }
+        if (aColHasChanged(changesCol)) {
+            changed = true;
+        }
+        board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+
+    private static boolean aColHasChanged(boolean[] c) {
+        for (boolean b : c) {
+            if (b) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean mutateEachCol(int col) {
+        boolean changed = false;
+        int mergedRow = -1;
+        for (int row = board.size() - 2; row >= 0; row -= 1) {
+            if (board.tile(col, row) != null) {
+                int chosenRow = chooseRow(board, col, row, mergedRow);
+                if (chosenRow != row) {
+                    if (board.move(col, chosenRow, board.tile(col, row))) {
+                        mergedRow = chosenRow;
+                        score += board.tile(col, chosenRow).value();
+                    }
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private static int chooseRow(Board b, int c, int r, int mergedRow) {
+        int valueOfCurrentTile = b.tile(c, r).value();
+        do {
+            r += 1;
+        } while (validIndex(b, c, r) && (mergedRow != r) && (b.tile(c, r) == null || b.tile(c, r).value() == valueOfCurrentTile));
+        return r - 1;
     }
 
     /** Checks if the game is over and sets the gameOver variable
