@@ -113,6 +113,16 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        for (int c = 0; c < board.size(); c += 1) {
+            for (int r = 0; r < board.size(); r += 1) {
+                Tile t = board.tile(c, r);
+                if (board.tile(c, r) != null) {
+                    board.move(c, 3, t);
+                    changed = true;
+                    score += 7;
+                }
+            }
+        }
 
         checkGameOver();
         if (changed) {
@@ -189,7 +199,7 @@ public class Model extends Observable {
 
     private static boolean adjacentTileWithTheSameValueExists(Board b, int col, int row) {
         int selfValue = b.tile(col, row).value();
-        return (validIndex(b, col + 1, row) && (b.tile(col + 1, row).value() == selfValue)) || (validIndex(b, col, row + 1) && (b.tile(col, row + 1).value() == selfValue));
+        return (validIndex(b, col + 1, row) && (b.tile(col + 1, row).value() == selfValue)) || (validIndex(b, col, row + 1) && (b.tile(col, row + 1).value() == selfValue)); //optimized by @ChatGPT
     }
 
     private static boolean validIndex(Board b, int col, int row) {
