@@ -232,8 +232,11 @@ public class Model extends Observable {
     }
 
     private static boolean adjacentTileWithTheSameValueExists(Board b, int col, int row) {
+        if (b.tile(col, row) == null) {
+            return false;
+        }
         int selfValue = b.tile(col, row).value();
-        return (validIndex(b, col + 1, row) && (b.tile(col + 1, row).value() == selfValue)) || (validIndex(b, col, row + 1) && (b.tile(col, row + 1).value() == selfValue)); //optimized by @ChatGPT
+        return (validIndex(b, col + 1, row) && (b.tile(col + 1, row) != null) && (b.tile(col + 1, row).value() == selfValue)) || (validIndex(b, col, row + 1) && (b.tile(col, row + 1) != null) && (b.tile(col, row + 1).value() == selfValue)); //optimized by @ChatGPT
     }
 
     private static boolean validIndex(Board b, int col, int row) {
