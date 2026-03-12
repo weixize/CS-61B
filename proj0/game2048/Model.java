@@ -173,7 +173,27 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        return emptySpaceExists(b) || twoAdjacentTilesWithTheSameValueExist(b);
+    }
+
+    private static boolean twoAdjacentTilesWithTheSameValueExist(Board b) {
+        for (int col = 0; col < b.size(); col = col + 1) {
+            for (int row = 0; row < b.size(); row = row + 1) {
+                if (adjacentTileWithTheSameValueExists(b, col, row)) {
+                    return true;
+                }
+            }
+        }
         return false;
+    }
+
+    private static boolean adjacentTileWithTheSameValueExists(Board b, int col, int row) {
+        int selfValue = b.tile(col, row).value();
+        return (validIndex(b, col + 1, row) && (b.tile(col + 1, row).value() == selfValue)) || (validIndex(b, col - 1, row) && (b.tile(col - 1, row).value() == selfValue)) || (validIndex(b, col, row + 1) && (b.tile(col, row + 1).value() == selfValue)) || (validIndex(b, col, row - 1) && (b.tile(col, row - 1).value() == selfValue));
+    }
+
+    private static boolean validIndex(Board b, int col, int row) {
+        return col >= 0 && col < b.size() && row >= 0 && row < b.size();
     }
 
 
