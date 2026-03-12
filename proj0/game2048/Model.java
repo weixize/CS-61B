@@ -189,7 +189,7 @@ public class Model extends Observable {
 
     private static boolean adjacentTileWithTheSameValueExists(Board b, int col, int row) {
         int selfValue = b.tile(col, row).value();
-        return (validIndex(b, col + 1, row) && (b.tile(col + 1, row).value() == selfValue)) || (validIndex(b, col - 1, row) && (b.tile(col - 1, row).value() == selfValue)) || (validIndex(b, col, row + 1) && (b.tile(col, row + 1).value() == selfValue)) || (validIndex(b, col, row - 1) && (b.tile(col, row - 1).value() == selfValue));
+        return (validIndex(b, col + 1, row) && (b.tile(col + 1, row).value() == selfValue)) || (validIndex(b, col, row + 1) && (b.tile(col, row + 1).value() == selfValue));
     }
 
     private static boolean validIndex(Board b, int col, int row) {
