@@ -50,17 +50,14 @@ public class ArrayDeque<T> {
     }
 
     public void printDeque() {
-        int first = indexNormalization(nextFirst + 1);
-        int pointer = first;
-        while (pointer < first + items.length - 1) {
-            if (items[pointer] != null) {
-                System.out.print(items[indexNormalization(pointer)] + " ");
-                pointer += 1;
-            } else {
-                pointer += items.length - size;
-            }
+        for (int i = 0; i < size - 1; i += 1) {
+            System.out.print(get(i) + " ");
         }
-        System.out.println(items[pointer]);
+        if (isEmpty()) {
+            System.out.println();
+        } else {
+            System.out.println(get(size - 1));
+        }
     }
 
     public T removeFirst() {
@@ -86,13 +83,10 @@ public class ArrayDeque<T> {
     }
 
     public T get(int index) {
-        int first = indexNormalization(nextFirst + 1);
         if (index >= size || index < 0) {
             return null;
-        } else if (items[indexNormalization(index + first)] == null) {
-            return items[indexNormalization(index + first + (items.length - size))];
-        } else {
-            return items[indexNormalization(index + first)];
         }
+        int first = indexNormalization(nextFirst + 1);
+        return items[indexNormalization(index + first)];
     }
 }

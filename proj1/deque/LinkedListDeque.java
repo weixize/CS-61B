@@ -51,7 +51,11 @@ public class LinkedListDeque<T> {
             System.out.print(pointer.item + " ");
             pointer = pointer.next;
         }
-        System.out.println(pointer.item);
+        if (!isEmpty()){
+            System.out.println(pointer.item);
+        } else {
+            System.out.println();
+        }
     }
 
     public T removeFirst() {
@@ -91,7 +95,7 @@ public class LinkedListDeque<T> {
     }
 
     public T getRecursive(int index) {
-        if (index >= size) {
+        if (index >= size || index < 0) {
             return null;
         } else {
             return getRecursiveHelper(index, sentinel.next);
