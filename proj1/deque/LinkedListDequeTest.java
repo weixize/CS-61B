@@ -157,4 +157,47 @@ public class LinkedListDequeTest {
             }
         }
     }
+
+    @Test
+    public void iterableTest() {
+        LinkedListDeque<Integer> LLD = new LinkedListDeque<>();
+        int N = 5000;
+        for (int i = 0; i < N; i += 1) {
+            LLD.addLast(i);
+        }
+
+        int expected = 0;
+        for (int i : LLD) {
+            assertEquals(expected, i);
+            expected += 1;
+        }
+    }
+
+    @Test
+    public void equalsTest() {
+        LinkedListDeque<Integer> LLD = new LinkedListDeque<>();
+        LinkedListDeque<Integer> oLLD = new LinkedListDeque<>();
+        ArrayDeque<Integer> AD = new ArrayDeque<>();
+        int N = 8;
+        for (int i = 0; i < N; i += 1) {
+            LLD.addLast(i);
+            oLLD.addLast(i);
+            AD.addLast(i);
+        }
+        assertTrue("LinkedListDeque as input failed! ", LLD.equals(oLLD));
+        assertTrue("LinkedListDeque as input failed! ", LLD.equals(LLD));
+        assertTrue("ArrayDeque as input failed! ", LLD.equals(AD));
+
+        LinkedListDeque<Integer> fLLD = new LinkedListDeque<>();
+        LinkedListDeque<Integer> foLLD = new LinkedListDeque<>();
+        ArrayDeque<Integer> fAD = new ArrayDeque<>();
+        int M = 8;
+        for (int i = 0; i < M; i += 1) {
+            fLLD.addLast(i);
+            foLLD.addFirst(i);
+            fAD.addFirst(i);
+        }
+        assertTrue("LinkedListDeque as input failed! ", !fLLD.equals(foLLD));
+        assertTrue("ArrayDeque as input failed! ", !fLLD.equals(fAD));
+    }
 }

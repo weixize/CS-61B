@@ -1,6 +1,8 @@
 package deque;
 
-public class ArrayDeque<T> {
+import java.util.Iterator;
+
+public class ArrayDeque<T> implements Iterable<T> {
     private T[] items;
     private int size;
     private int nextLast;
@@ -88,5 +90,61 @@ public class ArrayDeque<T> {
         }
         int first = indexNormalization(nextFirst + 1);
         return items[indexNormalization(index + first)];
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    private class ArrayDequeIterator implements Iterator<T> {
+        private int cnt = 0;
+
+        @Override
+        public boolean hasNext() {
+            return cnt < size;
+        }
+
+        @Override
+        public T next() {
+            T returnItem = get(cnt);
+            cnt += 1;
+            return returnItem;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o instanceof ArrayDeque) {
+            ArrayDeque AD = (ArrayDeque) o;
+            if (this.size != AD.size) {
+                return false;
+            }
+            int i = 0;
+            for (T x : this) {
+                if (!x.equals(AD.get(i))) {
+                    return false;
+                }
+                i += 1;
+            }
+            return true;
+        } else if (o instanceof LinkedListDeque) {
+            LinkedListDeque LLD = (LinkedListDeque) o;
+            if (this.size != LLD.size()) {
+                return false;
+            }
+            int i = 0;
+            for (Object x : LLD) {
+                if (!x.equals(this.get(i))) {
+                    return false;
+                }
+                i += 1;
+            }
+            return true;
+        }
+        return false;
     }
 }
