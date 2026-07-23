@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 
 public class TestFlik {
     @Test
-    public void TestIsSameNumber1() {
+    public void testIsSameNumber1() {
         for (int i = 0; i < 128; i += 1) {
             int j = i;
             assertTrue("testing " + i, Flik.isSameNumber(i, j));
@@ -13,7 +13,7 @@ public class TestFlik {
     }
 
     @Test
-    public void TestIsSameNumber2() {
+    public void testIsSameNumber2() {
         for (int i = 128; i < 256; i += 1) {
             int j = i;
             assertTrue("testing " + i, Flik.isSameNumber(i, j));
@@ -21,7 +21,7 @@ public class TestFlik {
     }
 
     @Test
-    public void TestIsSameNumber3() {
+    public void testIsSameNumber3() {
         for (int i = 256; i < 500; i += 1) {
             int j = i;
             assertTrue("testing " + i, Flik.isSameNumber(i, j));
@@ -29,8 +29,8 @@ public class TestFlik {
     }
 
     @Test
-    public void TestIsSameNumber4() {
-        for (int i = -10000; i < 10000; i += 1) {
+    public void testIsSameNumber4() {
+        for (int i = -1000000000; i < 1000000000; i += 1) {
             int j = i;
             assertTrue("testing " + i, Flik.isSameNumber(i, j));
         }
