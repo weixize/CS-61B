@@ -128,9 +128,9 @@ public class LinkedListDequeTest {
             ArrayDeque<Integer> AD = new ArrayDeque<>();
             LinkedListDeque<Integer> LLD = new LinkedListDeque<>();
 
-            int N = 9;
+            int N = 5000;
             for (int i = 0; i < N; i += 1) {
-                int operationNumber = StdRandom.uniform(0, 4);
+                int operationNumber = StdRandom.uniform(0, 6);
                 if (operationNumber == 0) {
                     // addLast
                     int randVal = StdRandom.uniform(0, 100);
@@ -143,9 +143,10 @@ public class LinkedListDequeTest {
                     assertEquals(sizeALNR, sizeBAL);
                 } else if (operationNumber == 2) {
                     if (!AD.isEmpty()) {
-                        Integer firstALNR = AD.get(0);
-                        Integer firstBAL = LLD.get(0);
-                        assertEquals(firstALNR, firstBAL);
+                        int randomIndex = StdRandom.uniform(0, AD.size());
+                        Integer randomALNR = AD.get(randomIndex);
+                        Integer randomBAL = LLD.get(randomIndex);
+                        assertEquals(randomALNR, randomBAL);
                     }
                 } else if (operationNumber == 3) {
                     if (!AD.isEmpty()) {
@@ -153,7 +154,19 @@ public class LinkedListDequeTest {
                         int lastBAL = LLD.removeLast();
                         assertEquals(lastALNR, lastBAL);
                     }
+                } else if (operationNumber == 4) {
+                    int randVal = StdRandom.uniform(0, 100);
+                    AD.addFirst(randVal);
+                    LLD.addFirst(randVal);
+                } else if (operationNumber == 5) {
+                    if (!AD.isEmpty()) {
+                        int firstALNR = AD.removeFirst();
+                        int firstBAL = LLD.removeFirst();
+                        assertEquals(firstALNR, firstBAL);
+                    }
                 }
+                assertEquals(AD, LLD);
+                assertEquals(LLD, AD);
             }
         }
     }
@@ -171,6 +184,8 @@ public class LinkedListDequeTest {
             assertEquals(expected, i);
             expected += 1;
         }
+
+        assertEquals(N, expected);
     }
 
     @Test
@@ -178,7 +193,7 @@ public class LinkedListDequeTest {
         LinkedListDeque<Integer> LLD = new LinkedListDeque<>();
         LinkedListDeque<Integer> oLLD = new LinkedListDeque<>();
         ArrayDeque<Integer> AD = new ArrayDeque<>();
-        int N = 8;
+        int N = 5000;
         for (int i = 0; i < N; i += 1) {
             LLD.addLast(i);
             oLLD.addLast(i);
@@ -199,5 +214,21 @@ public class LinkedListDequeTest {
         }
         assertTrue("LinkedListDeque as input failed! ", !fLLD.equals(foLLD));
         assertTrue("ArrayDeque as input failed! ", !fLLD.equals(fAD));
+    }
+
+    @Test
+    public void getRecursiveTest() {
+        LinkedListDeque<Integer> LLD = new LinkedListDeque<>();
+
+        for (int i = 0; i < 100; i += 1) {
+            LLD.addLast(i);
+        }
+
+        for (int i = 0; i < 100; i += 1) {
+            assertEquals(Integer.valueOf(i), LLD.getRecursive(i));
+        }
+
+        assertNull(LLD.getRecursive(-1));
+        assertNull(LLD.getRecursive(100));
     }
 }

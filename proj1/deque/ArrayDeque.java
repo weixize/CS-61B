@@ -15,8 +15,27 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         nextFirst = 4;
     }
 
+    public int itemsLength() {
+        return items.length;
+    }
+
+    private void resize(int length) {
+        T[] resizedItems = (T[]) new Object[length];
+        int cnt = 0;
+        for (T item : this) {
+            resizedItems[cnt] = item;
+            cnt += 1;
+        }
+        items = resizedItems;
+        nextFirst = resizedItems.length - 1;
+        nextLast = size;
+    }
+
     @Override
     public void addLast(T item) {
+        if (size == items.length) {
+            resize(2 * items.length);
+        }
         items[nextLast] = item;
         nextLast = indexNormalization(nextLast + 1);
         size += 1;
@@ -24,6 +43,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     @Override
     public void addFirst(T item) {
+        if (size == items.length) {
+            resize(2 * items.length);
+        }
         items[nextFirst] = item;
         nextFirst = indexNormalization(nextFirst - 1);
         size += 1;
@@ -76,6 +98,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T item = items[nextFirst];
         items[nextFirst] = null;
         size -= 1;
+        if (items.length > 8 && (size < 0.25 * items.length)) {
+            resize(items.length / 2);
+        }
         return item;
     }
 
@@ -88,6 +113,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T item = items[nextLast];
         items[nextLast] = null;
         size -= 1;
+        if (items.length > 8 && (size < 0.25 * items.length)) {
+            resize(items.length / 2);
+        }
         return item;
     }
 
