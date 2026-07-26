@@ -2,6 +2,8 @@ package deque;
 import edu.princeton.cs.algs4.StdRandom;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class ArrayDequeTest {
     @Test
@@ -50,7 +52,7 @@ public class ArrayDequeTest {
     }
 
     @Test
-    public void resizeTest() {
+    public void resizeTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         ArrayDeque<Integer> AD = new ArrayDeque<>();
         int N = 10000;
         for (int i = 0; i < N; i += 1) {
@@ -63,11 +65,14 @@ public class ArrayDequeTest {
         for (int i = 0; i < N - M - 1; i += 1) {
             AD.removeLast();
         }
-        assertTrue((AD.itemsLength() <= 8) || (AD.size() >= 0.25 * AD.itemsLength()));
+
+        Method method = ArrayDeque.class.getDeclaredMethod("itemsLength");
+        method.setAccessible(true);
+        assertTrue(((int) method.invoke(AD) <= 8) || (AD.size() >= 0.25 * (int) method.invoke(AD)));
     }
 
     @Test
-    public void randomizedTest() {
+    public void randomizedTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         int n = 5000;
         for (int j = 0; j < n; j += 1) {
             ArrayDeque<Integer> AD = new ArrayDeque<>();
@@ -112,7 +117,10 @@ public class ArrayDequeTest {
                 }
                 assertEquals(AD, LLD);
                 assertEquals(LLD, AD);
-                assertTrue((AD.itemsLength() <= 8) || (AD.size() >= 0.25 * AD.itemsLength()));
+
+                Method method = ArrayDeque.class.getDeclaredMethod("itemsLength");
+                method.setAccessible(true);
+                assertTrue(((int) method.invoke(AD) <= 8) || (AD.size() >= 0.25 * (int) method.invoke(AD)));
             }
         }
     }

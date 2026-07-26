@@ -15,7 +15,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         nextFirst = 4;
     }
 
-    public int itemsLength() {
+    private int itemsLength() {
         return items.length;
     }
 
