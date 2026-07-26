@@ -28,7 +28,7 @@ public class TestArrayDequeEC {
                         Integer lastSad = sad.removeLast();
                         Integer lastAas = aas.removeLast();
                         cache[i] = new int[]{operationNumber};
-                        assertEquals(construct(cache), lastSad, lastAas);
+                        assertEquals(construct(cache), lastAas, lastSad);
                     }
                 } else if (operationNumber == 2) {
                     int randVal = StdRandom.uniform(0, 100);
@@ -40,7 +40,7 @@ public class TestArrayDequeEC {
                         Integer firstSad = sad.removeFirst();
                         Integer firstAas = aas.removeFirst();
                         cache[i] = new int[]{operationNumber};
-                        assertEquals(construct(cache), firstSad, firstAas);
+                        assertEquals(construct(cache), firstAas, firstSad);
                     }
                 }
             }
