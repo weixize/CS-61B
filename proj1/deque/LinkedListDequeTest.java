@@ -194,6 +194,9 @@ public class LinkedListDequeTest {
         LinkedListDeque<Integer> oLLD = new LinkedListDeque<>();
         ArrayDeque<Integer> AD = new ArrayDeque<>();
         int N = 5000;
+        LLD.addFirst(null);
+        oLLD.addFirst(null);
+        AD.addFirst(null);
         for (int i = 0; i < N; i += 1) {
             LLD.addLast(i);
             oLLD.addLast(i);

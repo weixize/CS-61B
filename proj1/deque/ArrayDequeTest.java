@@ -29,6 +29,9 @@ public class ArrayDequeTest {
         ArrayDeque<Integer> AD = new ArrayDeque<>();
         ArrayDeque<Integer> oAD = new ArrayDeque<>();
         int N = 5000;
+        LLD.addFirst(null);
+        oAD.addFirst(null);
+        AD.addFirst(null);
         for (int i = 0; i < N; i += 1) {
             LLD.addLast(i);
             oAD.addLast(i);

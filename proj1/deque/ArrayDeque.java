@@ -1,6 +1,7 @@
 package deque;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private T[] items;
@@ -149,27 +150,27 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (this == o) {
             return true;
         }
-        if (o instanceof ArrayDeque) {
-            ArrayDeque ad = (ArrayDeque) o;
-            if (this.size != ad.size) {
-                return false;
-            }
-            int i = 0;
-            for (T x : this) {
-                if (!x.equals(ad.get(i))) {
-                    return false;
-                }
-                i += 1;
-            }
-            return true;
-        } else if (o instanceof LinkedListDeque) {
+        if (o instanceof LinkedListDeque) {
             LinkedListDeque lld = (LinkedListDeque) o;
             if (this.size != lld.size()) {
                 return false;
             }
             int i = 0;
             for (Object x : lld) {
-                if (!x.equals(this.get(i))) {
+                if (!Objects.equals(x, get(i))) {
+                    return false;
+                }
+                i += 1;
+            }
+            return true;
+        } else if (o instanceof Deque) {
+            Deque d = (Deque) o;
+            if (this.size != d.size()) {
+                return false;
+            }
+            int i = 0;
+            for (T x : this) {
+                if (!Objects.equals(x, d.get(i))) {
                     return false;
                 }
                 i += 1;
