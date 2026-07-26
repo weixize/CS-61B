@@ -54,7 +54,7 @@ public class TestArrayDequeEC {
                 continue;
             }
             if (ints[0] == 0) {
-                returnSB.append("addFirst(");
+                returnSB.append("addLast(");
                 returnSB.append(ints[1]);
                 returnSB.append(")\n");
             } else if (ints[0] == 1) {
