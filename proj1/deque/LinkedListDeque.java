@@ -4,11 +4,11 @@ import java.util.Iterator;
 
 public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     private class Node {
-        public T item;
-        public Node next;
-        public Node prev;
+        private T item;
+        private Node next;
+        private Node prev;
 
-        public Node(T i, Node n, Node p) {
+        Node(T i, Node n, Node p) {
             item = i;
             next = n;
             prev = p;
@@ -53,7 +53,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             System.out.print(pointer.item + " ");
             pointer = pointer.next;
         }
-        if (!isEmpty()){
+        if (!isEmpty()) {
             System.out.println(pointer.item);
         } else {
             System.out.println();
@@ -128,7 +128,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     private class LinkedListDequeIterator implements Iterator<T> {
         private Node pointer;
-        public LinkedListDequeIterator() {
+        LinkedListDequeIterator() {
             pointer = sentinel.next;
         }
 
@@ -151,24 +151,24 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return true;
         }
         if (o instanceof ArrayDeque) {
-            ArrayDeque AD = (ArrayDeque) o;
-            if (this.size != AD.size()) {
+            ArrayDeque ad = (ArrayDeque) o;
+            if (this.size != ad.size()) {
                 return false;
             }
             int i = 0;
             for (T x : this) {
-                if (!x.equals(AD.get(i))) {
+                if (!x.equals(ad.get(i))) {
                     return false;
                 }
                 i += 1;
             }
             return true;
         } else if (o instanceof LinkedListDeque) {
-            LinkedListDeque LLD = (LinkedListDeque) o;
-            if (this.size != LLD.size) {
+            LinkedListDeque lld = (LinkedListDeque) o;
+            if (this.size != lld.size) {
                 return false;
             }
-            Node p = LLD.sentinel.next;
+            Node p = lld.sentinel.next;
             for (T x : this) {
                 if (!x.equals(p.item)) {
                     return false;

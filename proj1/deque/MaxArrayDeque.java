@@ -52,13 +52,13 @@ public class MaxArrayDeque<T> extends ArrayDeque<T> {
         if (size() == 0) {
             return null;
         }
-        T maxItem = get(0);
+        T max = get(0);
         for (T item : this) {
-            if (myComparator.compare(item, maxItem) > 0) {
-                maxItem = item;
+            if (myComparator.compare(item, max) > 0) {
+                max = item;
             }
         }
-        return maxItem;
+        return max;
     }
 
     public T max() {
@@ -69,12 +69,12 @@ public class MaxArrayDeque<T> extends ArrayDeque<T> {
         if (size() == 0) {
             return null;
         }
-        T maxItem = get(0);
-        for(T item : this) {
-            if (c.compare(item, maxItem) > 0) {
-                maxItem = item;
+        T max = get(0);
+        for (T item : this) {
+            if (c.compare(item, max) > 0) {
+                max = item;
             }
         }
-        return maxItem;
+        return max;
     }
 }
