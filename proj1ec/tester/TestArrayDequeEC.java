@@ -6,6 +6,8 @@ import edu.princeton.cs.algs4.StdRandom;
 import org.junit.Test;
 import student.StudentArrayDeque;
 
+import java.util.Objects;
+
 public class TestArrayDequeEC {
     @Test
     public void randomizedTest() {
@@ -28,7 +30,9 @@ public class TestArrayDequeEC {
                         Integer lastSad = sad.removeLast();
                         Integer lastAas = aas.removeLast();
                         cache[i] = new int[]{operationNumber};
-                        assertEquals(construct(cache), lastAas, lastSad);
+                        if (!Objects.equals(lastAas, lastSad)) {
+                            assertEquals(construct(cache, i + 1), lastAas, lastSad);
+                        }
                     }
                 } else if (operationNumber == 2) {
                     int randVal = StdRandom.uniform(0, 100);
@@ -40,16 +44,24 @@ public class TestArrayDequeEC {
                         Integer firstSad = sad.removeFirst();
                         Integer firstAas = aas.removeFirst();
                         cache[i] = new int[]{operationNumber};
-                        assertEquals(construct(cache), firstAas, firstSad);
+                        if (!Objects.equals(firstAas, firstSad)) {
+                            assertEquals(construct(cache, i + 1), firstAas, firstSad);
+                        }
                     }
                 }
             }
         }
     }
 
-    private static String construct(int[][] cache) {
+    private static String construct(int[][] cache, int size) {
         StringBuilder returnSB = new StringBuilder();
+        int cnt = 0;
         for (int[] ints : cache) {
+            if (cnt == size) {
+                break;
+            }
+            cnt += 1;
+
             if (ints == null) {
                 continue;
             }
