@@ -21,7 +21,7 @@ public class CapersRepository {
 
     /** Main metadata folder. */
     static final File CAPERS_FOLDER = join(CWD, ".capers"); // TODO Hint: look at the `join`
-                                            //      function in Utils
+    //      function in Utils
 
     /**
      * Does required filesystem operations to allow for persistence.
@@ -37,7 +37,7 @@ public class CapersRepository {
         if (!CAPERS_FOLDER.exists()) {
             CAPERS_FOLDER.mkdir();
             Dog.DOG_FOLDER.mkdir();
-        } else if (!CAPERS_FOLDER.exists()) {
+        } else if (!Dog.DOG_FOLDER.exists()) {
             Dog.DOG_FOLDER.mkdir();
         }
     }
