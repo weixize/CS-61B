@@ -114,14 +114,67 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         return returnSet;
     }
 
+    private void remove(BSTNode targetNode) {
+        if (targetNode.left == null && targetNode.right == null) {
+            if (targetNode.rightParent != null) {
+                targetNode.rightParent.left = null;
+            } else if (targetNode.leftParent != null) {
+                targetNode.leftParent.right = null;
+            } else {
+                root = null;
+            }
+        } else if (targetNode.left == null) {
+            if (targetNode.leftParent != null) {
+                targetNode.leftParent.right = targetNode.right;
+            } else if (targetNode.rightParent != null) {
+                targetNode.rightParent.left = targetNode.right;
+            } else {
+                root = targetNode.right;
+            }
+        } else if (targetNode.right == null) {
+            if (targetNode.rightParent != null) {
+                targetNode.rightParent.left = targetNode.left;
+            } else if (targetNode.leftParent != null) {
+                targetNode.leftParent.right = targetNode.left;
+            } else {
+                root = targetNode.left;
+            }
+        } else {
+            BSTNode successor = findSuccessor(targetNode);
+            targetNode.key = successor.key;
+            targetNode.value = successor.value;
+            remove(successor);
+        }
+    }
+
+    private BSTNode findSuccessor(BSTNode targetNode) {
+        targetNode = targetNode.right;
+        while (targetNode.left != null) {
+            targetNode = targetNode.left;
+        }
+        return targetNode;
+    }
+
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException();
+        BSTNode foundNode = findNode(key);
+        if (foundNode == null) {
+            return null;
+        }
+        remove(foundNode);
+        size -= 1;
+        return foundNode.value;
     }
 
     @Override
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException();
+        BSTNode foundNode = findNode(key);
+        if (foundNode == null || foundNode.value != value) {
+            return null;
+        }
+        remove(foundNode);
+        size -= 1;
+        return foundNode.value;
     }
 
     @Override
