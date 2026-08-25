@@ -1,6 +1,8 @@
+/*
+标记@GPT-5.6 Sol High的地方是GPT-5.6 Sol发现的漏洞或可以优化的地方，该处代码均为本人自己独立修改，非生成式AI所生成！
+ */
 package bstmap;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
@@ -33,7 +35,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
             return null;
         }
 
-        if (Objects.equals(currNode.key, key)) {
+        if (currNode.key.compareTo(key) == 0) { // @GPT-5.6 Sol High
             return currNode;
         } else if (key.compareTo(currNode.key) < 0) {
             return findNode(key, currNode.left);
@@ -72,13 +74,6 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
 
     @Override
     public void put(K key, V value) {
-        BSTNode foundNode = findNode(key);
-
-        if (foundNode != null) {
-            foundNode.value = value;
-            return;
-        }
-
         if (size == 0) {
             root = new BSTNode(key, value, null, null);
             size += 1;
@@ -86,22 +81,25 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         }
 
         put(key, value, root);
-        size += 1;
     }
 
     private void put(K key, V value, BSTNode currNode) {
         if (key.compareTo(currNode.key) < 0) {
             if (currNode.left == null) {
                 currNode.left = new BSTNode(key, value, currNode, null);
+                size += 1; // @GPT-5.6 Sol High
             } else {
                 put(key, value, currNode.left);
             }
         } else if (key.compareTo(currNode.key) > 0) {
             if (currNode.right == null) {
                 currNode.right = new BSTNode(key, value, null, currNode);
+                size += 1; // @GPT-5.6 Sol High
             } else {
                 put(key, value, currNode.right);
             }
+        } else {
+            currNode.value = value;  // @GPT-5.6 Sol High
         }
     }
 
@@ -126,18 +124,26 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         } else if (targetNode.left == null) {
             if (targetNode.leftParent != null) {
                 targetNode.leftParent.right = targetNode.right;
+                targetNode.right.leftParent = targetNode.leftParent; // @GPT-5.6 Sol High
             } else if (targetNode.rightParent != null) {
                 targetNode.rightParent.left = targetNode.right;
+                targetNode.right.rightParent = targetNode.rightParent; // @GPT-5.6 Sol High
+                targetNode.right.leftParent = null; // @GPT-5.6 Sol High
             } else {
                 root = targetNode.right;
+                targetNode.right.leftParent = null; // @GPT-5.6 Sol High
             }
         } else if (targetNode.right == null) {
             if (targetNode.rightParent != null) {
                 targetNode.rightParent.left = targetNode.left;
+                targetNode.left.rightParent = targetNode.rightParent; // @GPT-5.6 Sol High
             } else if (targetNode.leftParent != null) {
                 targetNode.leftParent.right = targetNode.left;
+                targetNode.left.leftParent = targetNode.leftParent; // @GPT-5.6 Sol High
+                targetNode.left.rightParent = null; // @GPT-5.6 Sol High
             } else {
                 root = targetNode.left;
+                targetNode.left.rightParent = null; // @GPT-5.6 Sol High
             }
         } else {
             BSTNode successor = findSuccessor(targetNode);
@@ -161,20 +167,22 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         if (foundNode == null) {
             return null;
         }
+        V returnValue = foundNode.value; // @GPT-5.6 Sol High
         remove(foundNode);
         size -= 1;
-        return foundNode.value;
+        return returnValue;
     }
 
     @Override
     public V remove(K key, V value) {
         BSTNode foundNode = findNode(key);
-        if (foundNode == null || foundNode.value != value) {
+        if (foundNode == null || !Objects.equals(foundNode.value, value)) { // @GPT-5.6 Sol High
             return null;
         }
+        V returnValue = foundNode.value; // @GPT-5.6 Sol High
         remove(foundNode);
         size -= 1;
-        return foundNode.value;
+        return returnValue;
     }
 
     @Override
