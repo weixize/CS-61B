@@ -28,7 +28,6 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     /* Instance Variables */
     private Collection<Node>[] buckets;
     // You should probably define some more!
-    private HashSet<K> keys = new HashSet<>();
     private int bucketSize = 0;
     private double loadFactor = 0.75;
     private int size = 0;
@@ -111,7 +110,6 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     @Override
     public void clear() {
         buckets = createTable(initialSize);
-        keys = new HashSet<>();
         size = 0;
         bucketSize = initialSize;
     }
@@ -152,7 +150,6 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         } else {
             buckets[Math.floorMod(key.hashCode(), bucketSize)].add(createNode(key, value));
             size += 1;
-            keys.add(key);
             if ((double) size / bucketSize > loadFactor) {
                 resize(2 * bucketSize);
             }
@@ -172,7 +169,11 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public Set<K> keySet() {
-        return keys;
+        Set<K> returnSet = new HashSet<>();
+        for (K key : this) {
+            returnSet.add(key);
+        }
+        return returnSet;
     }
 
     @Override
@@ -196,12 +197,52 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private V remove(Node targetNode) {
         buckets[Math.floorMod(targetNode.key.hashCode(), bucketSize)].remove(targetNode);
         size -= 1;
-        keys.remove(targetNode.key);
         return targetNode.value;
     }
 
     @Override
     public Iterator<K> iterator() {
-        return keys.iterator();
+        return new KeyIterator();
+    }
+
+    private class KeyIterator implements Iterator<K> {
+        private int pos = 0;
+        private int currBucket = 0;
+        private Node currNode;
+        private Iterator<Node> nodeIterator;
+
+        public KeyIterator() {
+            if (hasNext()) {
+                while (buckets[currBucket].isEmpty()) {
+                    currBucket += 1;
+                }
+                nodeIterator = buckets[currBucket].iterator();
+                currNode = nodeIterator.next();
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return pos < size;
+        }
+
+        @Override
+        public K next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            K returnKey = currNode.key;
+            pos += 1;
+            if (hasNext()) {
+                if (!nodeIterator.hasNext()) {
+                    do {
+                        currBucket += 1;
+                    } while (buckets[currBucket].isEmpty());
+                    nodeIterator = buckets[currBucket].iterator();
+                }
+                currNode = nodeIterator.next();
+            }
+            return returnKey;
+        }
     }
 }
