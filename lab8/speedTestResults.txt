@@ -167,3 +167,65 @@ Would you like to try more timed-tests? (y/n):
 
 需要“有序性”时选 BSTMap/TreeMap，只追求快速查找时通常选 HashMap。
 如果只考虑 get / put / containsKey，并且不需要顺序，那么通常 HashMap 更合适，因为平均/摊还时间是 Theta(1)，而平衡 BST 一般是 Theta(log N)。
+
+
+"C:\Program Files\Eclipse Adoptium\jdk-25.0.2.10-hotspot\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA 2025.3.3\lib\idea_rt.jar=25368" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath D:\Desktop\cs61b\CS-61B\lab8\target\classes;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\ucb.jar;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\algs4.jar;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\jh61b.jar;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\stdlib.jar;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\junit-4.12.jar;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\xchart-3.5.1.jar;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\stdlib-package.jar;D:\Desktop\cs61b\CS-61B\library-sp21\javalib\hamcrest-core-1.3.jar speed.BucketsSpeedTest
+
+ This program inserts random Strings of length L
+ Into different types of maps as <String, Integer> pairs.
+
+What would you like L to be?: 10000
+
+Enter # strings to insert into each map: 10000
+class hashmap.MyHashMapALBuckets: 0.95 sec
+class hashmap.MyHashMapLLBuckets: 0.93 sec
+class hashmap.MyHashMapTSBuckets: 0.93 sec
+class hashmap.MyHashMapHSBuckets: 0.92 sec
+class hashmap.MyHashMapPQBuckets: 0.91 sec
+
+Would you like to try more timed-tests? (y/n)y
+
+Enter # strings to insert into each map: 20000
+class hashmap.MyHashMapALBuckets: 1.84 sec
+class hashmap.MyHashMapLLBuckets: 1.81 sec
+class hashmap.MyHashMapTSBuckets: 1.83 sec
+class hashmap.MyHashMapHSBuckets: 2.16 sec
+class hashmap.MyHashMapPQBuckets: 2.17 sec
+
+Would you like to try more timed-tests? (y/n)y
+
+Enter # strings to insert into each map: 30000
+class hashmap.MyHashMapALBuckets: 3.30 sec
+class hashmap.MyHashMapLLBuckets: 3.24 sec
+class hashmap.MyHashMapTSBuckets: 3.20 sec
+class hashmap.MyHashMapHSBuckets: 3.24 sec
+class hashmap.MyHashMapPQBuckets: 3.24 sec
+
+Would you like to try more timed-tests? (y/n)y
+
+Enter # strings to insert into each map: 40000
+class hashmap.MyHashMapALBuckets: 4.31 sec
+class hashmap.MyHashMapLLBuckets: 4.36 sec
+class hashmap.MyHashMapTSBuckets: 4.27 sec
+class hashmap.MyHashMapHSBuckets: 4.32 sec
+class hashmap.MyHashMapPQBuckets: 4.32 sec
+
+Would you like to try more timed-tests? (y/n)y
+
+Enter # strings to insert into each map: 50000
+class hashmap.MyHashMapALBuckets: 5.43 sec
+class hashmap.MyHashMapLLBuckets: 5.43 sec
+class hashmap.MyHashMapTSBuckets: 5.43 sec
+class hashmap.MyHashMapHSBuckets: 5.47 sec
+class hashmap.MyHashMapPQBuckets: 5.41 sec
+
+Would you like to try more timed-tests? (y/n)
+
+
+如果我们能够在 `TreeSet` 中使用对数时间的查找，或者在 `HashSet` 中使用常数时间的查找，而不是遍历整个 bucket，那么哈希表在某些情况下会更快。
+
+目前我们的实现无论 bucket 的底层数据结构是 `TreeSet`、`HashSet` 还是其他结构，查找 `Node` 时都要遍历整个 bucket，因此没有真正利用这些数据结构本身更高效的查找能力。
+
+如果使用 `TreeSet` 的查找能力，单个 bucket 内的查找可以达到 (O(log B))；如果使用 `HashSet`，平均可以达到 (O(1))，其中 (B) 是该 bucket 中的元素数量。
+
+不过，在哈希函数分布良好并且负载因子受到控制时，每个 bucket 中平均只有常数个元素，因此整个 `MyHashMap` 的平均查找时间本来就是 (O(1))。所以这种优化通常不会改变哈希表整体的渐进时间复杂度，但可能改善常数因子，并且在碰撞较多、某些 bucket 很大的情况下带来更明显的性能提升。
