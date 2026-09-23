@@ -1,16 +1,23 @@
 package gitlet;
 
 // TODO: any imports you need here
-
+import static gitlet.Utils.*;
+import static gitlet.Repository.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
+import java.util.HashMap;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
- *
- *  @author TODO
+ *  This class represents a commit.
+ *  It should be serializable so that it can be put into the 'commits' folder.
+ *  This class is at the core of Gitlet.
+ *  @author WEI Xize
  */
-public class Commit {
+public class Commit implements Serializable {
     /**
      * TODO: add instance variables here.
      *
@@ -21,6 +28,44 @@ public class Commit {
 
     /** The message of this Commit. */
     private String message;
+    /** The date of this Commit. */
+    private Date date;
+    /**
+     * The parent Commits of this Commit.
+     * Needs to set the transient fields to appropriate values when deserialized
+     */
+    private transient Commit parent1;
+    private transient Commit parent2;
+    /** The parent Commits' UID of this commit. */
+    private String parentsUID1;
+    private String parentsUID2;
+    /** The contents of this commit, represented by a map. */
+    private HashMap<File, String> trackedFiles;
+
+
 
     /* TODO: fill in the rest of this class. */
+    /**
+     * initial commit
+     * invoked by Repository.init()
+     */
+    public Commit() {
+        message = "initial commit";
+        date = new Date(0);
+        parent1 = null;
+        parent2 = null;
+        parentsUID1 = null;
+        parentsUID2 = null;
+        trackedFiles = new HashMap<>();
+    }
+
+    /**
+     * serialize itself to the target place.
+     * @throws IOException
+     */
+    public void saveCommit() throws IOException {
+        File commitFile = join(COMMITS_DIR, sha1(serialize(this)));
+        commitFile.createNewFile();
+        writeObject(commitFile, this);
+    }
 }
