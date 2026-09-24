@@ -17,7 +17,7 @@ Initialize the Gitlet repo. Invoked by Main.java case "init"
 3. Create the first commit and serialize it into the 'commits' folder.
 4. Setup master branch and the HEAD.
 
-#### createbranch()
+###### createbranch()
 
 A helper method, create a new branch.
 
@@ -29,6 +29,10 @@ Stage files, invoked by Main.java.
 3. Extract the current state of staging area.
 4. Get the current commit info. If the file content remains the same as the commit's, then remove the file from staging area and then exit.
 5. Add to the staging area. If the blob does not exist, then create a blob.
+
+###### lots of helper methods
+
+Used to manipulate the .gitlet folder. See docs in Repository.java.
 
 ### Class 2: Commit.java
 
