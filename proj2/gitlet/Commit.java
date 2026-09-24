@@ -68,4 +68,8 @@ public class Commit implements Serializable {
         commitFile.createNewFile();
         writeObject(commitFile, this);
     }
+
+    public HashMap<File, String> getTrackedFiles() {
+        return trackedFiles;
+    }
 }

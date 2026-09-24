@@ -21,6 +21,15 @@ Initialize the Gitlet repo. Invoked by Main.java case "init"
 
 A helper method, create a new branch.
 
+#### add(String fileName)
+
+Stage files, invoked by Main.java.
+1. Make sure file exists.
+2. Check if the file is in the removal area.
+3. Extract the current state of staging area.
+4. Get the current commit info. If the file content remains the same as the commit's, then remove the file from staging area and then exit.
+5. Add to the staging area. If the blob does not exist, then create a blob.
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.
@@ -51,3 +60,4 @@ The .gitlet folder includes:
 ## Note
 1. Serialize the object before sha1 it.
 2. Make before testing.
+3. HashSet implements Serializable while Set does not. So, we need use HashSet to readObject.

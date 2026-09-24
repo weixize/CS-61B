@@ -34,6 +34,7 @@ public class Main {
                     message("Incorrect operands.");
                     System.exit(0);
                 }
+                Repository.add(args[1]);
                 break;
             // TODO: FILL THE REST IN
             default:

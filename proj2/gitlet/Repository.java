@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -43,13 +44,14 @@ public class Repository {
     /* TODO: fill in the rest of this class. */
 
     /**
-     * initialize the Gitlet repo.
-     * invoked by Main.java case "init"
+     * Initialize the Gitlet repo.
+     * Invoked by Main.java case "init"
      */
     public static void init() throws IOException {
         /* 1st step of gitlet-design.md. */
         if (GITLET_DIR.exists()) {
-            throw error("A Gitlet version-control system already exists in the current directory.");
+            message("A Gitlet version-control system already exists in the current directory.");
+            System.exit(0);
         }
 
         /* 2nd step of gitlet-design.md. */
@@ -79,5 +81,112 @@ public class Repository {
         File branchFile = join(BRANCHES_DIR, name);
         branchFile.createNewFile();
         writeContents(branchFile, commitUID);
+    }
+
+    /**
+     * Stage files, invoked by Main.java.
+     * @param fileName the name of the file to be staged
+     */
+    public static void add(String fileName) throws IOException {
+        checkInitialized();
+
+        /* 1st step of gitlet-design.md. */
+        File file = join(CWD, fileName);
+        if (!file.exists()) {
+            message("File does not exist.");
+            System.exit(0);
+        }
+
+        /* 2nd step of gitlet-design.md. */
+        removeSomethingInRemovalArea(file);
+
+        /* 3rd step of gitlet-design.md. */
+        HashMap<File, String> currentStagingArea;
+        if (!STAGED_FOR_ADDITIONS.exists()) {
+            STAGED_FOR_ADDITIONS.createNewFile();
+            currentStagingArea = new HashMap<>();
+        } else {
+            currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        }
+
+        /* 4th step of gitlet-design.md. */
+        Commit currentCommit = searchCurrentCommit();
+        HashMap<File, String> trackedFiles = currentCommit.getTrackedFiles();
+        if (Objects.equals(trackedFiles.get(file), sha1(readContents(file)))) {
+            removeSomethingInStagingArea(file, currentStagingArea);
+            return;
+        }
+
+        /* 5th step of gitlet-design.md. */
+        addSomethingInStagingArea(file, currentStagingArea);
+        createBlob(file);
+    }
+
+    /**
+     * Used to get the current commit info.
+     * @return HEAD Commit object
+     */
+    private static Commit searchCurrentCommit() {
+        return readObject(join(COMMITS_DIR, readContentsAsString(join(BRANCHES_DIR, readContentsAsString(HEAD)))), Commit.class);
+    }
+
+    /**
+     * I/O helper function.
+     * @param file
+     * @param currentStagingArea
+     */
+    private static void removeSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) {
+        currentStagingArea.remove(file);
+        writeObject(STAGED_FOR_ADDITIONS, currentStagingArea);
+
+    }
+
+    /**
+     * I/O helper function.
+     * @param file
+     */
+    private static void removeSomethingInRemovalArea(File file) {
+        if (STAGED_FOR_REMOVAL.exists()) {
+            HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+            if (currentRemovalArea.remove(file)) {
+                writeObject(STAGED_FOR_REMOVAL, currentRemovalArea);
+            }
+        }
+    }
+
+    /**
+     * I/O helper function.
+     * @param file
+     * @param currentStagingArea
+     * @throws IOException
+     */
+    private static void addSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) throws IOException {
+        currentStagingArea.put(file, sha1(readContents(file)));
+        writeObject(STAGED_FOR_ADDITIONS, currentStagingArea);
+    }
+
+    /**
+     * Create a blob for FILE if it does not exist.
+     * @param file
+     * @throws IOException
+     */
+    private static void createBlob(File file) throws IOException {
+        File blob = join(BLOBS_DIR, sha1(readContents(file)));
+        if (!blob.exists()) {
+            blob.createNewFile();
+            writeContents(blob, readContents(file));
+        }
+    }
+
+    /**
+     * Check if .gitlet exists.
+     * If not, print out error message.
+     * Should be used in front of every command, except for init command.
+     */
+    private static void checkInitialized() {
+        if (!GITLET_DIR.exists()) {
+            message("Not in an initialized Gitlet directory.");
+            System.exit(0);
+        }
     }
 }
