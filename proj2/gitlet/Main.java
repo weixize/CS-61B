@@ -22,24 +22,33 @@ public class Main {
         switch(firstArg) {
             case "init":
                 // TODO: handle the `init` command
-                if (args.length != 1) {
-                    message("Incorrect operands.");
-                    System.exit(0);
-                }
+                checkOperandsNumbers(args, 1);
                 Repository.init();
                 break;
             case "add":
                 // TODO: handle the `add [filename]` command
-                if (args.length != 2) {
-                    message("Incorrect operands.");
-                    System.exit(0);
-                }
+                checkOperandsNumbers(args, 2);
                 Repository.add(args[1]);
                 break;
             // TODO: FILL THE REST IN
+            case "commit":
+                checkOperandsNumbers(args, 2);
+                Repository.commit(args[1]);
             default:
                 message("No command with that name exists.");
                 System.exit(0);
+        }
+    }
+
+    /**
+     * Check numbers of operands
+     * @param args arguments
+     * @param n valid number
+     */
+    private static void checkOperandsNumbers(String[] args, int n) {
+        if (args.length != n) {
+            message("Incorrect operands.");
+            System.exit(0);
         }
     }
 }

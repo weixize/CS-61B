@@ -60,6 +60,9 @@ public class Repository {
         BLOBS_DIR.mkdir();
         HEAD.createNewFile();
         BRANCHES_DIR.mkdir();
+        STAGED_FOR_ADDITIONS.createNewFile();
+        STAGED_FOR_REMOVAL.createNewFile();
+        resetStagingArea();
 
         /* 3rd step of gitlet-design.md. */
         Commit initialCommit = new Commit();
@@ -88,9 +91,8 @@ public class Repository {
      * @param fileName the name of the file to be staged
      */
     public static void add(String fileName) throws IOException {
-        checkInitialized();
-
         /* 1st step of gitlet-design.md. */
+        checkInitialized();
         File file = join(CWD, fileName);
         if (!file.exists()) {
             message("File does not exist.");
@@ -102,12 +104,7 @@ public class Repository {
 
         /* 3rd step of gitlet-design.md. */
         HashMap<File, String> currentStagingArea;
-        if (!STAGED_FOR_ADDITIONS.exists()) {
-            STAGED_FOR_ADDITIONS.createNewFile();
-            currentStagingArea = new HashMap<>();
-        } else {
-            currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
-        }
+        currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
 
         /* 4th step of gitlet-design.md. */
         Commit currentCommit = searchCurrentCommit();
@@ -136,9 +133,9 @@ public class Repository {
      * @param currentStagingArea
      */
     private static void removeSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) {
-        currentStagingArea.remove(file);
-        writeObject(STAGED_FOR_ADDITIONS, currentStagingArea);
-
+        if (currentStagingArea.remove(file) != null) {
+            writeObject(STAGED_FOR_ADDITIONS, currentStagingArea);
+        }
     }
 
     /**
@@ -146,11 +143,9 @@ public class Repository {
      * @param file
      */
     private static void removeSomethingInRemovalArea(File file) {
-        if (STAGED_FOR_REMOVAL.exists()) {
-            HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
-            if (currentRemovalArea.remove(file)) {
-                writeObject(STAGED_FOR_REMOVAL, currentRemovalArea);
-            }
+        HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        if (currentRemovalArea.remove(file)) {
+            writeObject(STAGED_FOR_REMOVAL, currentRemovalArea);
         }
     }
 
@@ -188,5 +183,51 @@ public class Repository {
             message("Not in an initialized Gitlet directory.");
             System.exit(0);
         }
+    }
+
+    /**
+     * Create a commit, invoked by Main.java.
+     * @param msg the message of a commit
+     */
+    public static void commit(String msg) throws IOException {
+        checkInitialized();
+
+        HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        if (currentRemovalArea.isEmpty() && currentStagingArea.isEmpty()) {
+            message("No changes added to the commit.");
+            System.exit(0);
+        }
+        if (msg.isEmpty()) {
+            message("Please enter a commit message.");
+            System.exit(0);
+        }
+
+        Commit lastestCommit = searchCurrentCommit();
+        HashMap<File, String> lastestTrackedFiles = new HashMap<>(lastestCommit.getTrackedFiles());
+        for (File file : currentRemovalArea) {
+            lastestTrackedFiles.remove(file);
+        }
+        lastestTrackedFiles.putAll(currentStagingArea);
+        resetStagingArea();
+
+        Commit newCommit = new Commit(msg, sha1(serialize(lastestCommit)), lastestTrackedFiles);
+        newCommit.saveCommit();
+
+        moveHEADTo(sha1(serialize(lastestCommit)));
+    }
+
+    /**
+     * Overwrite the HEAD branch with the UID of the latest commit.
+     * @param UID the UID of the latest commit
+     */
+    private static void moveHEADTo(String UID) {
+        File HEADBranchFile = join(BRANCHES_DIR, readContentsAsString(HEAD));
+        writeContents(HEADBranchFile, UID);
+    }
+
+    private static void resetStagingArea() {
+        writeObject(STAGED_FOR_ADDITIONS, new HashMap<File, String>());
+        writeObject(STAGED_FOR_REMOVAL, new HashSet<File>());
     }
 }

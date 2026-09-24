@@ -13,7 +13,7 @@ Contains only static variables and methods.
 
 Initialize the Gitlet repo. Invoked by Main.java case "init"
 1. Judge if the order is legal or not.
-2. Create all of needed folders and files.
+2. Create all of needed folders and files. **For staging areas, we will create the relative files and write empty data structures on them.**
 3. Create the first commit and serialize it into the 'commits' folder.
 4. Setup master branch and the HEAD.
 
@@ -24,7 +24,7 @@ A helper method, create a new branch.
 #### add(String fileName)
 
 Stage files, invoked by Main.java.
-1. Make sure file exists.
+1. Check Failure cases.
 2. Check if the file is in the removal area.
 3. Extract the current state of staging area.
 4. Get the current commit info. If the file content remains the same as the commit's, then remove the file from staging area and then exit.
@@ -34,6 +34,12 @@ Stage files, invoked by Main.java.
 
 Used to manipulate the .gitlet folder. See docs in Repository.java.
 
+#### commit(String msg)
+
+Create a commit, invoked by Main.java.
+1. Check Failure cases.
+2. 
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.
@@ -41,11 +47,15 @@ This class is at the core of Gitlet.
 
 #### Commit()
 
-Initial commit. Invoked by Repository.init()
+Initial commit. Invoked by Repository.init().
 
 #### saveCommit()
 
 Serialize the commit to the target directory.
+
+#### Commit(String msg, String parentsUID1, HashMap<File, String> trackedFiles)
+
+Constructor for not-initial commits.
 
 
 ## Algorithms

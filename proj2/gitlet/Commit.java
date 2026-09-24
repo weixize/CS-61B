@@ -46,8 +46,8 @@ public class Commit implements Serializable {
 
     /* TODO: fill in the rest of this class. */
     /**
-     * initial commit
-     * invoked by Repository.init()
+     * Initial commit
+     * Invoked by Repository.init()
      */
     public Commit() {
         message = "initial commit";
@@ -60,7 +60,7 @@ public class Commit implements Serializable {
     }
 
     /**
-     * serialize itself to the target place.
+     * Serialize itself to the target place.
      * @throws IOException
      */
     public void saveCommit() throws IOException {
@@ -69,7 +69,27 @@ public class Commit implements Serializable {
         writeObject(commitFile, this);
     }
 
+    /**
+     * An interface.
+     * @return trackedFiles.
+     */
     public HashMap<File, String> getTrackedFiles() {
         return trackedFiles;
+    }
+
+    /**
+     * Constructor for not-initial commits.
+     * @param msg message
+     * @param parentsUID1 UID of parent commit I.
+     * @param trackedFiles non-metadata.
+     */
+    public Commit(String msg, String parentsUID1, HashMap<File, String> trackedFiles) {
+        message = msg;
+        date = new Date();
+        parent1 = null;
+        parent2 = null;
+        this.parentsUID1 = parentsUID1;
+        parentsUID2 = null;
+        this.trackedFiles = trackedFiles;
     }
 }
