@@ -38,7 +38,9 @@ Used to manipulate the .gitlet folder. See docs in Repository.java.
 
 Create a commit, invoked by Main.java.
 1. Check Failure cases.
-2. 
+2. Add and remove files from the original tracked files HashMap.
+3. Create and save a new commit.
+4. Move the head and the branch to the current commit.
 
 ### Class 2: Commit.java
 
@@ -75,3 +77,5 @@ The .gitlet folder includes:
 1. Serialize the object before sha1 it.
 2. Make before testing.
 3. HashSet implements Serializable while Set does not. So, we need use HashSet to readObject.
+4. Break after cases, otherwise default case will be invoked.
+5. **Pay attention to the passed-in parameters. Do not mess it up, which will cause tons of great pain to debug:)**

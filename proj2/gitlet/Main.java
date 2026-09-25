@@ -34,6 +34,7 @@ public class Main {
             case "commit":
                 checkOperandsNumbers(args, 2);
                 Repository.commit(args[1]);
+                break;
             default:
                 message("No command with that name exists.");
                 System.exit(0);

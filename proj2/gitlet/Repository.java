@@ -192,17 +192,19 @@ public class Repository {
     public static void commit(String msg) throws IOException {
         checkInitialized();
 
+        /* 1st step of gitlet-design.md. */
         HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
         HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
         if (currentRemovalArea.isEmpty() && currentStagingArea.isEmpty()) {
             message("No changes added to the commit.");
             System.exit(0);
         }
-        if (msg.isEmpty()) {
+        if (msg.isBlank()) {
             message("Please enter a commit message.");
             System.exit(0);
         }
 
+        /* 2nd step of gitlet-design.md. */
         Commit lastestCommit = searchCurrentCommit();
         HashMap<File, String> lastestTrackedFiles = new HashMap<>(lastestCommit.getTrackedFiles());
         for (File file : currentRemovalArea) {
@@ -211,10 +213,12 @@ public class Repository {
         lastestTrackedFiles.putAll(currentStagingArea);
         resetStagingArea();
 
+        /* 3rd step of gitlet-design.md. */
         Commit newCommit = new Commit(msg, sha1(serialize(lastestCommit)), lastestTrackedFiles);
         newCommit.saveCommit();
 
-        moveHEADTo(sha1(serialize(lastestCommit)));
+        /* 4th step of gitlet-design.md. */
+        moveHEADTo(sha1(serialize(newCommit)));
     }
 
     /**
@@ -226,6 +230,9 @@ public class Repository {
         writeContents(HEADBranchFile, UID);
     }
 
+    /**
+     * Clear the Staging Area.
+     */
     private static void resetStagingArea() {
         writeObject(STAGED_FOR_ADDITIONS, new HashMap<File, String>());
         writeObject(STAGED_FOR_REMOVAL, new HashSet<File>());
