@@ -42,6 +42,13 @@ Create a commit, invoked by Main.java.
 3. Create and save a new commit.
 4. Move the head and the branch to the current commit.
 
+#### rm(String fileName)
+
+Stop tracking a certain file, invoked by Main.java.
+1. Check failure cases.
+2. Unstage the file if it is currently staged for addition.
+3. If the file is tracked in the current commit, stage it for removal and remove the file from the working directory if the user has not already done so (do not remove it unless it is tracked in the current commit).
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.

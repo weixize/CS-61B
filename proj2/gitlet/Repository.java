@@ -129,8 +129,8 @@ public class Repository {
 
     /**
      * I/O helper function.
-     * @param file
-     * @param currentStagingArea
+     * @param file file to be removed from staging area
+     * @param currentStagingArea current staging area
      */
     private static void removeSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) {
         if (currentStagingArea.remove(file) != null) {
@@ -140,7 +140,7 @@ public class Repository {
 
     /**
      * I/O helper function.
-     * @param file
+     * @param file file that should be removed from the removal area
      */
     private static void removeSomethingInRemovalArea(File file) {
         HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
@@ -151,8 +151,8 @@ public class Repository {
 
     /**
      * I/O helper function.
-     * @param file
-     * @param currentStagingArea
+     * @param file file to be staged
+     * @param currentStagingArea current staging area
      * @throws IOException
      */
     private static void addSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) throws IOException {
@@ -162,7 +162,7 @@ public class Repository {
 
     /**
      * Create a blob for FILE if it does not exist.
-     * @param file
+     * @param file the file we create blob for
      * @throws IOException
      */
     private static void createBlob(File file) throws IOException {
@@ -236,5 +236,46 @@ public class Repository {
     private static void resetStagingArea() {
         writeObject(STAGED_FOR_ADDITIONS, new HashMap<File, String>());
         writeObject(STAGED_FOR_REMOVAL, new HashSet<File>());
+    }
+
+    /**
+     * Stop tracking a certain file, invoked by Main.java.
+     * @param fileName the name of the to be removed file
+     */
+    public static void rm(String fileName) {
+        checkInitialized();
+
+        /* 1st step of gitlet-design.md. */
+        File fileToBeRemoved = join(CWD, fileName);
+        HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        Commit currentCommit = searchCurrentCommit();
+        HashMap<File, String> lastestTrackedFiles = new HashMap<>(currentCommit.getTrackedFiles());
+        boolean staged = currentStagingArea.get(fileToBeRemoved) != null;
+        boolean trackedByHAEDCommit = lastestTrackedFiles.get(fileToBeRemoved) != null;
+        if (!staged && !trackedByHAEDCommit) {
+            message("No reason to remove the file.");
+            System.exit(0);
+        }
+
+        /* 2nd step of gitlet-design.md. */
+        if (staged) {
+            removeSomethingInStagingArea(fileToBeRemoved, currentStagingArea);
+        }
+
+        /* 3rd step of gitlet-design.md. */
+        if (trackedByHAEDCommit) {
+            addSomethingInRemovalArea(fileToBeRemoved);
+            restrictedDelete(fileToBeRemoved);
+        }
+    }
+
+    /**
+     * I/O helper method.
+     * @param fileToBeRemoved the to be removed file
+     */
+    private static void addSomethingInRemovalArea(File fileToBeRemoved) {
+        HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        currentRemovalArea.add(fileToBeRemoved);
+        writeObject(STAGED_FOR_REMOVAL, currentRemovalArea);
     }
 }
