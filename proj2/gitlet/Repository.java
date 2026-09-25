@@ -108,7 +108,7 @@ public class Repository {
 
         /* 4th step of gitlet-design.md. */
         Commit currentCommit = searchCurrentCommit();
-        HashMap<File, String> trackedFiles = currentCommit.getTrackedFiles();
+        TreeMap<File, String> trackedFiles = currentCommit.getTrackedFiles();
         if (Objects.equals(trackedFiles.get(file), sha1(readContents(file)))) {
             removeSomethingInStagingArea(file, currentStagingArea);
             return;
@@ -124,7 +124,7 @@ public class Repository {
      * @return HEAD Commit object
      */
     private static Commit searchCurrentCommit() {
-        return readObject(join(COMMITS_DIR, readContentsAsString(join(BRANCHES_DIR, readContentsAsString(HEAD)))), Commit.class);
+        return Commit.fromFile(readContentsAsString(join(BRANCHES_DIR, readContentsAsString(HEAD))));
     }
 
     /**
@@ -206,7 +206,7 @@ public class Repository {
 
         /* 2nd step of gitlet-design.md. */
         Commit lastestCommit = searchCurrentCommit();
-        HashMap<File, String> lastestTrackedFiles = new HashMap<>(lastestCommit.getTrackedFiles());
+        TreeMap<File, String> lastestTrackedFiles = new TreeMap<>(lastestCommit.getTrackedFiles());
         for (File file : currentRemovalArea) {
             lastestTrackedFiles.remove(file);
         }
@@ -249,7 +249,7 @@ public class Repository {
         File fileToBeRemoved = join(CWD, fileName);
         HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
         Commit currentCommit = searchCurrentCommit();
-        HashMap<File, String> lastestTrackedFiles = new HashMap<>(currentCommit.getTrackedFiles());
+        TreeMap<File, String> lastestTrackedFiles = new TreeMap<>(currentCommit.getTrackedFiles());
         boolean staged = currentStagingArea.get(fileToBeRemoved) != null;
         boolean trackedByHAEDCommit = lastestTrackedFiles.get(fileToBeRemoved) != null;
         if (!staged && !trackedByHAEDCommit) {
@@ -277,5 +277,60 @@ public class Repository {
         HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
         currentRemovalArea.add(fileToBeRemoved);
         writeObject(STAGED_FOR_REMOVAL, currentRemovalArea);
+    }
+
+    /**
+     * Print out the history, invoked by Main.java.
+     */
+    public static void log() {
+        checkInitialized();
+
+        /* 1st step of gitlet-design.md. */
+        Commit currentCommit = searchCurrentCommit();
+        print(currentCommit);
+        String ParentsUID1 = currentCommit.getParentsUID1();
+        while (ParentsUID1 != null) {
+            currentCommit = Commit.fromFile(ParentsUID1);
+            ParentsUID1 = currentCommit.getParentsUID1();
+            print(currentCommit);
+        }
+    }
+
+    /**
+     * Print out the data of a certain commit.
+     * @param commit commit to be printed out
+     */
+    private static void print(Commit commit) {
+        System.out.println("===");
+        System.out.print("commit ");
+        System.out.println(sha1(serialize(commit)));
+        String parentsUID2 = commit.getParentsUID2();
+        if (parentsUID2 != null) {
+            System.out.print("Merge: ");
+            System.out.print(commit.getParentsUID1().substring(0, 7));
+            System.out.print(" ");
+            System.out.println(parentsUID2.substring(0, 7));
+        }
+
+
+        /* @DeepSeek V4.1 Flash */
+        System.out.print("Date: ");
+        Date date = commit.getDate();
+        TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+        Calendar cal = Calendar.getInstance(tz);
+        cal.setTime(date);
+
+        Formatter formatter = new Formatter();
+        formatter.format(Locale.US,
+                "%1$ta %1$tb %1$td %1$tT %1$tY %1$tz",
+                cal);
+
+        String result = formatter.toString();
+        System.out.println(result);
+        // Wed Dec 31 16:00:00 1969 -0800
+
+
+        System.out.println(commit.getMessage());
+        System.out.println();
     }
 }

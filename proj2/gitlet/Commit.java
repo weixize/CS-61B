@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
-import java.util.HashMap;
+import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -40,7 +40,7 @@ public class Commit implements Serializable {
     private String parentsUID1;
     private String parentsUID2;
     /** The contents of this commit, represented by a map. */
-    private HashMap<File, String> trackedFiles;
+    private TreeMap<File, String> trackedFiles;
 
 
 
@@ -56,7 +56,7 @@ public class Commit implements Serializable {
         parent2 = null;
         parentsUID1 = null;
         parentsUID2 = null;
-        trackedFiles = new HashMap<>();
+        trackedFiles = new TreeMap<>();
     }
 
     /**
@@ -69,11 +69,7 @@ public class Commit implements Serializable {
         writeObject(commitFile, this);
     }
 
-    /**
-     * An interface.
-     * @return trackedFiles.
-     */
-    public HashMap<File, String> getTrackedFiles() {
+    public TreeMap<File, String> getTrackedFiles() {
         return trackedFiles;
     }
 
@@ -83,7 +79,7 @@ public class Commit implements Serializable {
      * @param parentsUID1 UID of parent commit I.
      * @param trackedFiles non-metadata.
      */
-    public Commit(String msg, String parentsUID1, HashMap<File, String> trackedFiles) {
+    public Commit(String msg, String parentsUID1, TreeMap<File, String> trackedFiles) {
         message = msg;
         date = new Date();
         parent1 = null;
@@ -91,5 +87,30 @@ public class Commit implements Serializable {
         this.parentsUID1 = parentsUID1;
         parentsUID2 = null;
         this.trackedFiles = trackedFiles;
+    }
+
+    public String getParentsUID1() {
+        return parentsUID1;
+    }
+
+    /**
+     * Find the file named UID and read a Commit object from it.
+     * @param UID the name of the target file
+     * @return the desired Commit object
+     */
+    public static Commit fromFile(String UID) {
+        return readObject(join(COMMITS_DIR, UID), Commit.class);
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getParentsUID2() {
+        return parentsUID2;
     }
 }

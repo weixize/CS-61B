@@ -49,6 +49,11 @@ Stop tracking a certain file, invoked by Main.java.
 2. Unstage the file if it is currently staged for addition.
 3. If the file is tracked in the current commit, stage it for removal and remove the file from the working directory if the user has not already done so (do not remove it unless it is tracked in the current commit).
 
+#### log()
+
+Print out the history, invoked by Main.java.
+1. Iterate through all the commits in the history of current commit, print them.
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.
@@ -65,6 +70,10 @@ Serialize the commit to the target directory.
 #### Commit(String msg, String parentsUID1, HashMap<File, String> trackedFiles)
 
 Constructor for not-initial commits.
+
+#### fromFile(String UID)
+
+Find the file named UID and read a Commit object from it.
 
 
 ## Algorithms
@@ -86,3 +95,4 @@ The .gitlet folder includes:
 3. HashSet implements Serializable while Set does not. So, we need use HashSet to readObject.
 4. Break after cases, otherwise default case will be invoked.
 5. **Pay attention to the passed-in parameters. Do not mess it up, which will cause tons of great pain to debug:)**
+6. **Be careful using a HashMap when serializing! The order of things within the HashMap is non-deterministic. The solution is to use a TreeMap which will always have the same order.**
