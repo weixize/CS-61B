@@ -468,4 +468,68 @@ public class Repository {
         }
         System.out.println();
     }
+
+    public static void checkoutFileName(String fileName) throws IOException {
+        checkInitialized();
+        TreeMap<File, String> trackedFiles = searchCurrentCommit().getTrackedFiles();
+        checkFileExists(fileName, trackedFiles);
+
+        checkOut(fileName, trackedFiles);
+    }
+
+    public static void checkoutCommitIdFileName(String CommitId, String fileName) throws IOException {
+        checkInitialized();
+        TreeMap<File, String> trackedFiles = searchCommitByUID(CommitId).getTrackedFiles();
+        checkFileExists(fileName, trackedFiles);
+
+        checkOut(fileName, trackedFiles);
+    }
+
+    public static void checkoutBranchName(String branchName) {
+        checkInitialized();
+        checkBranch(branchName);
+    }
+
+    private static void checkFileExists(String fileName, TreeMap<File, String> trackedFiles) {
+        if (!trackedFiles.containsKey(join(CWD, fileName))) {
+            message("File does not exist in that commit.");
+            System.exit(0);
+        }
+    }
+
+    private static Commit searchCommitByUID(String UID) {
+        if (UID.length() == 40) {
+            return readObject(join(COMMITS_DIR, UID), Commit.class);
+        } else {
+            List<String> commitsNames = plainFilenamesIn(COMMITS_DIR);
+            for (String commitName : commitsNames) {
+                if (commitName.startsWith(UID)) {
+                    return readObject(join(COMMITS_DIR, commitName), Commit.class);
+                }
+            }
+            message("No commit with that id exists.");
+            System.exit(0);
+        }
+        return null;
+    }
+
+    private static void checkBranch(String branchName) {
+        if (Objects.equals(branchName, readContentsAsString(HEAD))) {
+            message("No need to checkout the current branch.");
+            System.exit(0);
+        }
+        File branchFile = join(BRANCHES_DIR, branchName);
+        if (!branchFile.exists()) {
+            message("No such branch exists.");
+            System.exit(0);
+        }
+    }
+
+    private static void checkOut(String fileName, TreeMap<File, String> trackedFiles) throws IOException {
+        File file = join(CWD, fileName);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+        writeContents(file, readContents(join(BLOBS_DIR, trackedFiles.get(file))));
+    }
 }

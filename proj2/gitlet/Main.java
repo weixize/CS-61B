@@ -55,6 +55,18 @@ public class Main {
                 checkOperandsNumbers(args, 1);
                 Repository.status();
                 break;
+            case "checkout":
+                if (args[1].equals("--")) {
+                    checkOperandsNumbers(args, 3);
+                    Repository.checkoutFileName(args[2]);
+                } else if (args[2].equals("--")) {
+                    checkOperandsNumbers(args, 4);
+                    Repository.checkoutCommitIdFileName(args[1], args[3]);
+                } else {
+                    checkOperandsNumbers(args, 2);
+                    Repository.checkoutBranchName(args[1]);
+                }
+                break;
             default:
                 message("No command with that name exists.");
                 System.exit(0);
