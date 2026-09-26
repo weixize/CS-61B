@@ -47,7 +47,7 @@ public class Repository {
      * Initialize the Gitlet repo.
      * Invoked by Main.java case "init"
      */
-    public static void init() throws IOException {
+    public static void init() {
         /* 1st step of gitlet-design.md. */
         if (GITLET_DIR.exists()) {
             message("A Gitlet version-control system already exists in the current directory.");
@@ -58,10 +58,7 @@ public class Repository {
         GITLET_DIR.mkdir();
         COMMITS_DIR.mkdir();
         BLOBS_DIR.mkdir();
-        HEAD.createNewFile();
         BRANCHES_DIR.mkdir();
-        STAGED_FOR_ADDITIONS.createNewFile();
-        STAGED_FOR_REMOVAL.createNewFile();
         resetStagingArea();
 
         /* 3rd step of gitlet-design.md. */
@@ -80,9 +77,8 @@ public class Repository {
      * @param commitUID the UID of the commit the branch points at
      * @throws IOException
      */
-    private static void createBranch(String name, String commitUID) throws IOException {
+    private static void createBranch(String name, String commitUID) {
         File branchFile = join(BRANCHES_DIR, name);
-        branchFile.createNewFile();
         writeContents(branchFile, commitUID);
     }
 
@@ -90,7 +86,7 @@ public class Repository {
      * Stage files, invoked by Main.java.
      * @param fileName the name of the file to be staged
      */
-    public static void add(String fileName) throws IOException {
+    public static void add(String fileName) {
         /* 1st step of gitlet-design.md. */
         checkInitialized();
         File file = join(CWD, fileName);
@@ -155,7 +151,7 @@ public class Repository {
      * @param currentStagingArea current staging area
      * @throws IOException
      */
-    private static void addSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) throws IOException {
+    private static void addSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) {
         currentStagingArea.put(file, sha1(readContents(file)));
         writeObject(STAGED_FOR_ADDITIONS, currentStagingArea);
     }
@@ -165,10 +161,9 @@ public class Repository {
      * @param file the file we create blob for
      * @throws IOException
      */
-    private static void createBlob(File file) throws IOException {
+    private static void createBlob(File file) {
         File blob = join(BLOBS_DIR, sha1(readContents(file)));
         if (!blob.exists()) {
-            blob.createNewFile();
             writeContents(blob, readContents(file));
         }
     }
@@ -189,7 +184,7 @@ public class Repository {
      * Create a commit, invoked by Main.java.
      * @param msg the message of a commit
      */
-    public static void commit(String msg) throws IOException {
+    public static void commit(String msg) {
         checkInitialized();
 
         /* 1st step of gitlet-design.md. */
@@ -469,7 +464,7 @@ public class Repository {
         System.out.println();
     }
 
-    public static void checkoutFileName(String fileName) throws IOException {
+    public static void checkoutFileName(String fileName) {
         checkInitialized();
         TreeMap<File, String> trackedFiles = searchCurrentCommit().getTrackedFiles();
         checkFileExists(fileName, trackedFiles);
@@ -477,7 +472,7 @@ public class Repository {
         checkOut(fileName, trackedFiles);
     }
 
-    public static void checkoutCommitIdFileName(String CommitId, String fileName) throws IOException {
+    public static void checkoutCommitIdFileName(String CommitId, String fileName) {
         checkInitialized();
         TreeMap<File, String> trackedFiles = searchCommitByUID(CommitId).getTrackedFiles();
         checkFileExists(fileName, trackedFiles);
@@ -525,11 +520,8 @@ public class Repository {
         }
     }
 
-    private static void checkOut(String fileName, TreeMap<File, String> trackedFiles) throws IOException {
+    private static void checkOut(String fileName, TreeMap<File, String> trackedFiles) {
         File file = join(CWD, fileName);
-        if (!file.exists()) {
-            file.createNewFile();
-        }
         writeContents(file, readContents(join(BLOBS_DIR, trackedFiles.get(file))));
     }
 }

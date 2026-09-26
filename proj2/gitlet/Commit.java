@@ -63,9 +63,8 @@ public class Commit implements Serializable {
      * Serialize itself to the target place.
      * @throws IOException
      */
-    public void saveCommit() throws IOException {
+    public void saveCommit() {
         File commitFile = join(COMMITS_DIR, sha1(serialize(this)));
-        commitFile.createNewFile();
         writeObject(commitFile, this);
     }
 
