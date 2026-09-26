@@ -58,6 +58,10 @@ Print out the history, invoked by Main.java.
 
 Print out every commit.
 
+#### find(String msg)
+
+Find the commit with a certain message, then print out its UID.
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.

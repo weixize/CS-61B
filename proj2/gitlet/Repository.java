@@ -345,4 +345,26 @@ public class Repository {
             print(readObject(join(COMMITS_DIR, fileName), Commit.class));
         }
     }
+
+    /**
+     * Find the commit with a certain message, then print out its UID.
+     * @param msg message of a commit
+     */
+    public static void find(String msg) {
+        checkInitialized();
+
+        List<String> fileNames = plainFilenamesIn(COMMITS_DIR);
+        boolean found = false;
+        for (String fileName : fileNames) {
+            Commit commit = readObject(join(COMMITS_DIR, fileName), Commit.class);
+            if (Objects.equals(commit.getMessage(), msg)) {
+                System.out.println(sha1(serialize(commit)));
+                found = true;
+            }
+        }
+        if (!found) {
+            message("Found no commit with that message.");
+            System.exit(0);
+        }
+    }
 }
