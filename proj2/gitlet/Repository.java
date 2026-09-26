@@ -333,4 +333,16 @@ public class Repository {
         System.out.println(commit.getMessage());
         System.out.println();
     }
+
+    /**
+     * Print out every commit.
+     */
+    public static void globalLog() {
+        checkInitialized();
+
+        List<String> fileNames = plainFilenamesIn(COMMITS_DIR);
+        for (String fileName : fileNames) {
+            print(readObject(join(COMMITS_DIR, fileName), Commit.class));
+        }
+    }
 }

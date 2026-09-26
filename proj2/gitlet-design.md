@@ -54,6 +54,10 @@ Stop tracking a certain file, invoked by Main.java.
 Print out the history, invoked by Main.java.
 1. Iterate through all the commits in the history of current commit, print them.
 
+#### globalLog()
+
+Print out every commit.
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.

@@ -43,6 +43,10 @@ public class Main {
                 checkOperandsNumbers(args, 1);
                 Repository.log();
                 break;
+            case "global-log":
+                checkOperandsNumbers(args, 1);
+                Repository.globalLog();
+                break;
             default:
                 message("No command with that name exists.");
                 System.exit(0);
