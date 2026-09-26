@@ -335,7 +335,7 @@ public class Repository {
     }
 
     /**
-     * Print out every commit.
+     * Print out every commit. Invoked by Main.java.
      */
     public static void globalLog() {
         checkInitialized();
@@ -347,7 +347,7 @@ public class Repository {
     }
 
     /**
-     * Find the commit with a certain message, then print out its UID.
+     * Find the commit with a certain message, then print out its UID. Invoked by Main.java.
      * @param msg message of a commit
      */
     public static void find(String msg) {
@@ -366,5 +366,106 @@ public class Repository {
             message("Found no commit with that message.");
             System.exit(0);
         }
+    }
+
+    /**
+     * Give some useful information to the user, invoked by Main.java.
+     */
+    public static void status() {
+        checkInitialized();
+
+        /* Branches. */
+        System.out.println("=== Branches ===");
+        String HEADBranch = readContentsAsString(HEAD);
+        List<String> branchFileNames = plainFilenamesIn(BRANCHES_DIR);
+        String[] branchFileNamesArray = branchFileNames.toArray(new String[0]);
+        Arrays.sort(branchFileNamesArray);
+        for (String branchFileName: branchFileNamesArray) {
+            if (Objects.equals(branchFileName, HEADBranch)) {
+                System.out.print("*");
+            }
+            System.out.println(branchFileName);
+        }
+        System.out.println();
+
+        /* Staged Files. */
+        System.out.println("=== Staged Files ===");
+        HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        String[] stagedFileNames = new String[stagingArea.size()];
+        int i = 0;
+        for (File stagedFile : stagingArea.keySet()) {
+            stagedFileNames[i] = stagedFile.getName();
+            i += 1;
+        }
+        sortAndPrint(stagedFileNames);
+
+        /* Removed Files. */
+        System.out.println("=== Removed Files ===");
+        HashSet<File> files = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        String[] fileNames = new String[files.size()];
+        int j = 0;
+        for (File file : files) {
+            fileNames[j] = file.getName();
+            j += 1;
+        }
+        sortAndPrint(fileNames);
+
+        /* Modifications Not Staged For Commit. */
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        TreeMap<File, String> currentTrackedFiles = searchCurrentCommit().getTrackedFiles();
+        HashSet<String> targetFileNames = new HashSet<>();
+        for (Map.Entry<File, String> entry : currentTrackedFiles.entrySet()) {
+            if (!files.contains(entry.getKey()) && !entry.getKey().exists()) {
+                targetFileNames.add(entry.getKey().getName());
+            }
+            if (entry.getKey().exists()) {
+                if (!sha1(readContents(entry.getKey())).equals(entry.getValue()) && !stagingArea.containsKey(entry.getKey()) && !files.contains(entry.getKey())) {
+                    targetFileNames.add(entry.getKey().getName());
+                }
+            }
+        }
+        for (Map.Entry<File, String> entry : stagingArea.entrySet()) {
+            if (!entry.getKey().exists() || !Objects.equals(sha1(readContents(entry.getKey())), entry.getValue())) {
+                targetFileNames.add(entry.getKey().getName());
+            }
+        }
+        String[] targetNamesArray = targetFileNames.toArray(new String[0]);
+        Arrays.sort(targetNamesArray);
+        for (String fileName : targetNamesArray) {
+            System.out.print(fileName);
+            if (join(CWD, fileName).exists()) {
+                System.out.println(" (modified)");
+            } else {
+                System.out.println(" (deleted)");
+            }
+        }
+        System.out.println();
+
+        /* Untracked Files. */
+        System.out.println("=== Untracked Files ===");
+        LinkedList<String> untrackedFileNames = new LinkedList<>();
+        String[] fileNamesInCWD = plainFilenamesIn(CWD).toArray(new String[0]);
+        for (String fileNameInCWD : fileNamesInCWD) {
+            if (!stagingArea.containsKey(join(CWD, fileNameInCWD)) && !currentTrackedFiles.containsKey(join(CWD, fileNameInCWD))) {
+                untrackedFileNames.add(fileNameInCWD);
+            }
+            if (files.contains(join(CWD, fileNameInCWD)) && join(CWD, fileNameInCWD).exists()) {
+                untrackedFileNames.add(fileNameInCWD);
+            }
+        }
+        String[] fileNamesArray = untrackedFileNames.toArray(new String[0]);
+        sortAndPrint(fileNamesArray);
+    }
+
+    /**
+     * Print out the files' name based on FILENAMES.
+     * @param fileNames a string array which contains the names of the to be printed files
+     */
+    private static void sortAndPrint(String[] fileNames) {
+        Arrays.sort(fileNames);
+        for (String fileName : fileNames) {
+            System.out.println(fileName);
+        }
+        System.out.println();
     }
 }

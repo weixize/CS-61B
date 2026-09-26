@@ -51,16 +51,22 @@ Stop tracking a certain file, invoked by Main.java.
 
 #### log()
 
-Print out the history, invoked by Main.java.
+Print out the history, invoked by Main.java. Invoked by Main.java.
 1. Iterate through all the commits in the history of current commit, print them.
 
 #### globalLog()
 
-Print out every commit.
+Print out every commit. Invoked by Main.java.
 
 #### find(String msg)
 
-Find the commit with a certain message, then print out its UID.
+Find the commit with a certain message, then print out its UID. Invoked by Main.java.
+
+#### status()
+
+Give some useful information to the user, invoked by Main.java.
+**In the section of Modifications Not Staged For Commit, I use a HashSet to store all the names of the target files, then convert it to a String Array, and then sort it, in order to avoid duplications.**
+To mark whether the file is deleted or modified, we have to check it by see whether the file exists and then print it out.
 
 ### Class 2: Commit.java
 
@@ -104,3 +110,4 @@ The .gitlet folder includes:
 4. Break after cases, otherwise default case will be invoked.
 5. **Pay attention to the passed-in parameters. Do not mess it up, which will cause tons of great pain to debug:)**
 6. **Be careful using a HashMap when serializing! The order of things within the HashMap is non-deterministic. The solution is to use a TreeMap which will always have the same order.**
+7. When we want to read the content of a file in the tracked files map, we need to first assess whether this file exists or not, otherwise we might make readContent error.
