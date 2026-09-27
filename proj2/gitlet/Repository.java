@@ -396,10 +396,10 @@ public class Repository {
 
         /* Removed Files. */
         System.out.println("=== Removed Files ===");
-        HashSet<File> files = readObject(STAGED_FOR_REMOVAL, HashSet.class);
-        String[] fileNames = new String[files.size()];
+        HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        String[] fileNames = new String[removalArea.size()];
         int j = 0;
-        for (File file : files) {
+        for (File file : removalArea) {
             fileNames[j] = file.getName();
             j += 1;
         }
@@ -410,11 +410,11 @@ public class Repository {
         TreeMap<File, String> currentTrackedFiles = searchCurrentCommit().getTrackedFiles();
         HashSet<String> targetFileNames = new HashSet<>();
         for (Map.Entry<File, String> entry : currentTrackedFiles.entrySet()) {
-            if (!files.contains(entry.getKey()) && !entry.getKey().exists()) {
+            if (!removalArea.contains(entry.getKey()) && !entry.getKey().exists()) {
                 targetFileNames.add(entry.getKey().getName());
             }
             if (entry.getKey().exists()) {
-                if (!sha1(readContents(entry.getKey())).equals(entry.getValue()) && !stagingArea.containsKey(entry.getKey()) && !files.contains(entry.getKey())) {
+                if (!sha1(readContents(entry.getKey())).equals(entry.getValue()) && !stagingArea.containsKey(entry.getKey()) && !removalArea.contains(entry.getKey())) {
                     targetFileNames.add(entry.getKey().getName());
                 }
             }
@@ -438,17 +438,7 @@ public class Repository {
 
         /* Untracked Files. */
         System.out.println("=== Untracked Files ===");
-        LinkedList<String> untrackedFileNames = new LinkedList<>();
-        String[] fileNamesInCWD = plainFilenamesIn(CWD).toArray(new String[0]);
-        for (String fileNameInCWD : fileNamesInCWD) {
-            if (!stagingArea.containsKey(join(CWD, fileNameInCWD)) && !currentTrackedFiles.containsKey(join(CWD, fileNameInCWD))) {
-                untrackedFileNames.add(fileNameInCWD);
-            }
-            if (files.contains(join(CWD, fileNameInCWD)) && join(CWD, fileNameInCWD).exists()) {
-                untrackedFileNames.add(fileNameInCWD);
-            }
-        }
-        String[] fileNamesArray = untrackedFileNames.toArray(new String[0]);
+        String[] fileNamesArray = searchUntrackedFilesNames(stagingArea, currentTrackedFiles, removalArea);
         sortAndPrint(fileNamesArray);
     }
 
@@ -464,27 +454,78 @@ public class Repository {
         System.out.println();
     }
 
+    /**
+     * Checkout file in the current HEAD commit, invoked by Main.java.
+     * @param fileName the name of the to-be-checked file
+     */
     public static void checkoutFileName(String fileName) {
+        /* 1st step of gitlet-design.md. */
         checkInitialized();
         TreeMap<File, String> trackedFiles = searchCurrentCommit().getTrackedFiles();
         checkFileExists(fileName, trackedFiles);
 
+        /* 2nd step of gitlet-design.md. */
         checkOut(fileName, trackedFiles);
     }
 
+    /**
+     * Checkout file in the COMMIT ID commit, invoked by Main.java.
+     * @param CommitId ID of the given commit
+     * @param fileName the name of the to-be-checked file
+     */
     public static void checkoutCommitIdFileName(String CommitId, String fileName) {
+        /* 1st step of gitlet-design.md. */
         checkInitialized();
         TreeMap<File, String> trackedFiles = searchCommitByUID(CommitId).getTrackedFiles();
         checkFileExists(fileName, trackedFiles);
 
+        /* 2nd step of gitlet-design.md. */
         checkOut(fileName, trackedFiles);
     }
 
+    /**
+     * Checkout all files based on the given branch, invoked by Main.java.
+     * @param branchName the name of the given branch
+     */
     public static void checkoutBranchName(String branchName) {
+        /* 1st step of gitlet-design.md. */
         checkInitialized();
         checkBranch(branchName);
+
+        /* 2nd step of gitlet-design.md. */
+        TreeMap<File, String> trackedFilesInCheckedOutBranch = searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName))).getTrackedFiles();
+        TreeMap<File, String> trackedFilesInCurrentBranch = searchCurrentCommit().getTrackedFiles();
+        HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        HashSet<String> untrackedFileNames = new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea, trackedFilesInCurrentBranch, removalArea)));
+
+        /* 3rd step of gitlet-design.md. */
+        for (File checkedOutFile : trackedFilesInCheckedOutBranch.keySet()) {
+            if (checkedOutFile.exists() && untrackedFileNames.contains(checkedOutFile.getName())) {
+                message("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+            checkOut(checkedOutFile.getName(), trackedFilesInCheckedOutBranch);
+        }
+
+        /* 4th step of gitlet-design.md. */
+        for (File currentTrackedFile : trackedFilesInCurrentBranch.keySet()) {
+            if (!trackedFilesInCheckedOutBranch.containsKey(currentTrackedFile)) {
+                restrictedDelete(currentTrackedFile);
+            }
+        }
+
+        /* 5th step of gitlet-design.md. */
+        resetStagingArea();
+        writeContents(HEAD, branchName);
+
     }
 
+    /**
+     * Check if file exists in CWD.
+     * @param fileName the name of the given file
+     * @param trackedFiles the files tracked in the given commit
+     */
     private static void checkFileExists(String fileName, TreeMap<File, String> trackedFiles) {
         if (!trackedFiles.containsKey(join(CWD, fileName))) {
             message("File does not exist in that commit.");
@@ -492,9 +533,19 @@ public class Repository {
         }
     }
 
+    /**
+     * Search commit based on the given UID.
+     * @param UID the UID of the target Commit
+     * @return the target Commit object
+     */
     private static Commit searchCommitByUID(String UID) {
         if (UID.length() == 40) {
-            return readObject(join(COMMITS_DIR, UID), Commit.class);
+            File commitFile = join(COMMITS_DIR, UID);
+            if (!commitFile.exists()) { //UID长度是40但是还是有可能没有这个commit.
+                message("No commit with that id exists.");
+                System.exit(0);
+            }
+            return readObject(commitFile, Commit.class);
         } else {
             List<String> commitsNames = plainFilenamesIn(COMMITS_DIR);
             for (String commitName : commitsNames) {
@@ -508,6 +559,10 @@ public class Repository {
         return null;
     }
 
+    /**
+     * Check whether the user pass in a valid branch name.
+     * @param branchName the name of the given branch
+     */
     private static void checkBranch(String branchName) {
         if (Objects.equals(branchName, readContentsAsString(HEAD))) {
             message("No need to checkout the current branch.");
@@ -520,8 +575,35 @@ public class Repository {
         }
     }
 
+    /**
+     * Create or overwrite the given file based on its tracked version in the given commit.
+     * @param fileName the name of the to-be-checked-out file
+     * @param trackedFiles the tracked files in given commit
+     */
     private static void checkOut(String fileName, TreeMap<File, String> trackedFiles) {
         File file = join(CWD, fileName);
         writeContents(file, readContents(join(BLOBS_DIR, trackedFiles.get(file))));
+    }
+
+    /**
+     * Search all untracked files in CWD.
+     * @param stagingArea the staging area
+     * @param currentTrackedFiles the tracked files in current commit
+     * @param removalArea the removal area
+     * @return a String array contains the names of all the untracked files in CWD
+     */
+    private static String[] searchUntrackedFilesNames(HashMap<File, String> stagingArea, TreeMap<File, String> currentTrackedFiles, HashSet<File> removalArea) {
+        LinkedList<String> untrackedFileNames = new LinkedList<>();
+        String[] fileNamesInCWD = plainFilenamesIn(CWD).toArray(new String[0]);
+        for (String fileNameInCWD : fileNamesInCWD) {
+            if (!stagingArea.containsKey(join(CWD, fileNameInCWD)) && !currentTrackedFiles.containsKey(join(CWD, fileNameInCWD))) {
+                untrackedFileNames.add(fileNameInCWD);
+            }
+            if (removalArea.contains(join(CWD, fileNameInCWD)) && join(CWD, fileNameInCWD).exists()) {
+                untrackedFileNames.add(fileNameInCWD);
+            }
+        }
+        String[] fileNamesArray = untrackedFileNames.toArray(new String[0]);
+        return fileNamesArray;
     }
 }

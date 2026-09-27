@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static gitlet.Utils.*;
 
@@ -56,11 +57,9 @@ public class Main {
                 Repository.status();
                 break;
             case "checkout":
-                if (args[1].equals("--")) {
-                    checkOperandsNumbers(args, 3);
+                if (args.length == 3 && args[1].equals("--")) {
                     Repository.checkoutFileName(args[2]);
-                } else if (args[2].equals("--")) {
-                    checkOperandsNumbers(args, 4);
+                } else if (args.length == 4 && args[2].equals("--")) { //不能直接访问args[2]，否则将会indexOutOfBounds. 需要先确定args的长度。
                     Repository.checkoutCommitIdFileName(args[1], args[3]);
                 } else {
                     checkOperandsNumbers(args, 2);
