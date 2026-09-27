@@ -69,15 +69,31 @@ Give some useful information to the user, invoked by Main.java.
 To mark whether the file is deleted or modified, we have to check it by see whether the file exists and then print it out.
 
 #### checkoutFileName(String fileName), checkoutCommitIdFileName(String CommitId, String fileName)
+
 1. Check all illegal cases.
 2. Checkout files.
 
 #### checkoutBranchName(String branchName)
+
 1. Check illegal repo and branch names.
 2. Extract all useful current state information.
 3. Iterate over the given branch's HEAD commit, and if there is illegal cases, print out the error message. Checkout all the files in it.
 4. Iterate over the current tracked files, if there is some files that are not tracked by the given commit, delete it.
 5. Clear staging area and move the HEAD to the given branch.
+
+#### branch(String branchName)
+
+Create a new branch, invoked by Main.java.
+1. Write the SHA1 of the current commit to the new created branch file.
+
+#### rmBranch(String branchName)
+
+Remove the given branch, invoked by Main.java.
+1. Delete the branch file.
+
+#### reset(String commitId)
+
+Checkout a specific commit, invoked by Main.java. Checkout a branch is a kind of checking a specific commit, so this method has the same five steps as checkoutBranchName(String branchName).
 
 ### Class 2: Commit.java
 

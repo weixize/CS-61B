@@ -66,6 +66,18 @@ public class Main {
                     Repository.checkoutBranchName(args[1]);
                 }
                 break;
+            case "branch":
+                checkOperandsNumbers(args, 2);
+                Repository.branch(args[1]);
+                break;
+            case "rm-branch":
+                checkOperandsNumbers(args, 2);
+                Repository.rmBranch(args[1]);
+                break;
+            case "reset":
+                checkOperandsNumbers(args, 2);
+                Repository.reset(args[1]);
+                break;
             default:
                 message("No command with that name exists.");
                 System.exit(0);

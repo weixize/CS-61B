@@ -500,20 +500,10 @@ public class Repository {
         HashSet<String> untrackedFileNames = new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea, trackedFilesInCurrentBranch, removalArea)));
 
         /* 3rd step of gitlet-design.md. */
-        for (File checkedOutFile : trackedFilesInCheckedOutBranch.keySet()) {
-            if (checkedOutFile.exists() && untrackedFileNames.contains(checkedOutFile.getName())) {
-                message("There is an untracked file in the way; delete it, or add and commit it first.");
-                System.exit(0);
-            }
-            checkOut(checkedOutFile.getName(), trackedFilesInCheckedOutBranch);
-        }
+        checkOutAllTheFilesTrackedByTheGivenCommit(trackedFilesInCheckedOutBranch, untrackedFileNames);
 
         /* 4th step of gitlet-design.md. */
-        for (File currentTrackedFile : trackedFilesInCurrentBranch.keySet()) {
-            if (!trackedFilesInCheckedOutBranch.containsKey(currentTrackedFile)) {
-                restrictedDelete(currentTrackedFile);
-            }
-        }
+        removesTrackedFilesThatAreNotPresentInThatCommit(trackedFilesInCurrentBranch, trackedFilesInCheckedOutBranch);
 
         /* 5th step of gitlet-design.md. */
         resetStagingArea();
@@ -605,5 +595,112 @@ public class Repository {
         }
         String[] fileNamesArray = untrackedFileNames.toArray(new String[0]);
         return fileNamesArray;
+    }
+
+    /**
+     * Create a new branch, invoked by Main.java.
+     * @param branchName the name of the new branch
+     */
+    public static void branch(String branchName) {
+        checkInitialized();
+        checkIfBranchAlreadyExists(branchName);
+
+        /* 1st step of gitlet-design.md. */
+        writeContents(join(BRANCHES_DIR, branchName), sha1(serialize(searchCurrentCommit())));
+    }
+
+    /**
+     * Check if the branch name is available.
+     * @param branchName the name of the new branch
+     */
+    private static void checkIfBranchAlreadyExists(String branchName) {
+        if (join(BRANCHES_DIR, branchName).exists()) {
+            message("A branch with that name already exists.");
+            System.exit(0);
+        }
+    }
+
+    /**
+     * Remove the given branch, invoked by Main.java.
+     * @param branchName the name of the given branch
+     */
+    public static void rmBranch(String branchName) {
+        checkInitialized();
+        checkBranchForRemoval(branchName);
+
+        /* 1st step of gitlet-design.md. */
+        join(BRANCHES_DIR, branchName).delete(); //restrictedDelete() can not be used since there is no .gitlet aside the branch file.
+    }
+
+    /**
+     * Check whether the user pass in a valid branch name.
+     * @param branchName the name of the given branch
+     */
+    private static void checkBranchForRemoval(String branchName) {
+        if (Objects.equals(branchName, readContentsAsString(HEAD))) {
+            message("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        File branchFile = join(BRANCHES_DIR, branchName);
+        if (!branchFile.exists()) {
+            message("A branch with that name does not exist.");
+            System.exit(0);
+        }
+    }
+
+    /**
+     * Checkout a specific commit, invoked by Main.java.
+     * @param commitId the UID of the given commit
+     */
+    public static void reset(String commitId) {
+        /* 1st step of gitlet-design.md. */
+        checkInitialized();
+
+        /* 2nd step of gitlet-design.md. */
+        TreeMap<File, String> trackedFilesInCheckedOutCommit = searchCommitByUID(commitId).getTrackedFiles();
+        TreeMap<File, String> trackedFilesInCurrentCommit = searchCurrentCommit().getTrackedFiles();
+        HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        HashSet<String> untrackedFileNames = new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea, trackedFilesInCurrentCommit, removalArea)));
+
+        /* 3rd step of gitlet-design.md. */
+        checkOutAllTheFilesTrackedByTheGivenCommit(trackedFilesInCheckedOutCommit, untrackedFileNames);
+
+        /* 4th step of gitlet-design.md. */
+        removesTrackedFilesThatAreNotPresentInThatCommit(trackedFilesInCurrentCommit, trackedFilesInCheckedOutCommit);
+
+        /* 5th step of gitlet-design.md. */
+        resetStagingArea();
+        writeContents(join(BRANCHES_DIR, readContentsAsString(HEAD)), sha1(serialize(searchCommitByUID(commitId)))); //Do not save commitId since it might be shortened.
+    }
+
+    /**
+     * Checks out all the files tracked by the given commit.
+     * @param trackedFilesInCheckedOutCommit tracked files in checked out commit
+     * @param untrackedFileNames untracked file names
+     */
+    private static void checkOutAllTheFilesTrackedByTheGivenCommit(TreeMap<File, String> trackedFilesInCheckedOutCommit, HashSet<String> untrackedFileNames) {
+        for (File checkedOutFile : trackedFilesInCheckedOutCommit.keySet()) {
+            if (checkedOutFile.exists() && untrackedFileNames.contains(checkedOutFile.getName())) {
+                message("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        for (File checkedOutFile : trackedFilesInCheckedOutCommit.keySet()) {
+            checkOut(checkedOutFile.getName(), trackedFilesInCheckedOutCommit); //Should manipulate after making sure that all the error cases are impossible!
+        }
+    }
+
+    /**
+     * Removes tracked files that are not present in that commit.
+     * @param trackedFilesInCurrentCommit tracked files in current commit
+     * @param trackedFilesInCheckedOutCommit tracked files in checked out commit
+     */
+    private static void removesTrackedFilesThatAreNotPresentInThatCommit(TreeMap<File, String> trackedFilesInCurrentCommit, TreeMap<File, String> trackedFilesInCheckedOutCommit) {
+        for (File currentTrackedFile : trackedFilesInCurrentCommit.keySet()) {
+            if (!trackedFilesInCheckedOutCommit.containsKey(currentTrackedFile)) {
+                restrictedDelete(currentTrackedFile);
+            }
+        }
     }
 }
