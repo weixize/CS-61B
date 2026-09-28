@@ -641,11 +641,7 @@ public class Repository {
             message("Cannot remove the current branch.");
             System.exit(0);
         }
-        File branchFile = join(BRANCHES_DIR, branchName);
-        if (!branchFile.exists()) {
-            message("A branch with that name does not exist.");
-            System.exit(0);
-        }
+        checkBranchExists(branchName);
     }
 
     /**
@@ -702,5 +698,89 @@ public class Repository {
                 restrictedDelete(currentTrackedFile);
             }
         }
+    }
+
+    public static void merge(String branchName) {
+        checkInitialized();
+        checkStagedAdditionsOrRemovals();
+        checkBranchExists(branchName);
+        checkMergeABranchWithItself(branchName);
+
+        Commit currentCommit = searchCurrentCommit();
+        Commit givenBranchHeads = searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName)));
+        Commit splitPoint = getSplitPoint(givenBranchHeads, currentCommit);
+    }
+
+    private static void checkStagedAdditionsOrRemovals() {
+        if (!readObject(STAGED_FOR_ADDITIONS, HashMap.class).isEmpty() || !readObject(STAGED_FOR_REMOVAL, HashSet.class).isEmpty()) {
+            message("You have uncommitted changes.");
+            System.exit(0);
+        }
+    }
+
+    private static void checkBranchExists(String branchName) {
+        File branchFile = join(BRANCHES_DIR, branchName);
+        if (!branchFile.exists()) {
+            message("A branch with that name does not exist.");
+            System.exit(0);
+        }
+    }
+
+    private static void checkMergeABranchWithItself(String branchName) {
+        if (Objects.equals(sha1(serialize(searchCurrentCommit())), readContentsAsString(join(BRANCHES_DIR, branchName)))) {
+            message("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+    }
+
+    /**
+     * Will break tie based on the distance from COMMIT2.
+     * @param commit1 given commit
+     * @param commit2 current HEAD commit
+     * @return split point commit
+     */
+    private static Commit getSplitPoint(Commit commit1, Commit commit2) {
+        HashSet<String> ancestorsOfCommit1 = new HashSet<>();
+        addToSet(sha1(serialize(commit1)), ancestorsOfCommit1);
+        return findSplitPointBasedOnAncestorsOfCommit1(sha1(serialize(commit2)), ancestorsOfCommit1);
+    }
+
+    private static void addToSet(String commitUID, HashSet<String> ancestors) {
+        if (ancestors.contains(commitUID)) {
+            return;
+        }
+
+        ancestors.add(commitUID);
+
+        Commit currentCommit = searchCommitByUID(commitUID);
+        if (currentCommit.getParentsUID1() == null) {
+            return;
+        } else {
+            addToSet(currentCommit.getParentsUID1(), ancestors);
+        }
+        if (currentCommit.getParentsUID2() != null) {
+            addToSet(currentCommit.getParentsUID2(), ancestors);
+        }
+    }
+
+    private static Commit findSplitPointBasedOnAncestorsOfCommit1(String commitUID, HashSet<String> ancestorsOfCommit1) {
+        HashSet<String> explored = new HashSet<>();
+        Deque<String> fringe = new ArrayDeque<>();
+        fringe.add(commitUID);
+        while (!fringe.isEmpty()) {
+            String currentCommitUID = fringe.remove();
+            explored.add(currentCommitUID);
+            Commit currentCommit = searchCommitByUID(currentCommitUID);
+            if (ancestorsOfCommit1.contains(currentCommitUID)) {
+                return currentCommit;
+            }
+            if (!explored.contains(currentCommit.getParentsUID1())) {
+                fringe.add(currentCommit.getParentsUID1());
+            }
+            if (currentCommit.getParentsUID2() != null && !explored.contains(currentCommit.getParentsUID2())) {
+                fringe.add(currentCommit.getParentsUID2());
+            }
+        }
+        return null;
     }
 }
