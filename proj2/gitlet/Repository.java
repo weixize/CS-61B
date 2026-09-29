@@ -774,7 +774,7 @@ public class Repository {
         TreeMap<File, String> splitPointTrackedFiles = splitPoint.getTrackedFiles();
         checkUntrackedFile(currentCommitTrackedFiles,
                 givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
-        boolean conflict = processMergingFiles(currentCommitTrackedFiles,
+        boolean conflict = p(currentCommitTrackedFiles,
                 givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
 
         /* 4th step of gitlet-design.md. */
@@ -894,12 +894,9 @@ public class Repository {
      * @param s split point tracked files
      * @return whether there are conflicts
      */
-    private static boolean processMergingFiles(TreeMap<File, String>
-                                                       c,
-                                               TreeMap<File, String>
-                                                       g,
-                                               TreeMap<File, String>
-                                                       s) {
+    private static boolean p(TreeMap<File, String> c,
+                             TreeMap<File, String> g,
+                             TreeMap<File, String> s) {
         boolean conflict = false;
 
         List<String> filesInCWD = plainFilenamesIn(CWD);
