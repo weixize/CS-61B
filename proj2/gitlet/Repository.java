@@ -847,6 +847,7 @@ public class Repository {
      */
     private static boolean processMergingFiles(TreeMap<File, String> currentCommitTrackedFiles, TreeMap<File, String> givenBranchHeadsTrackedFiles, TreeMap<File, String> splitPointTrackedFiles) {
         boolean conflict = false;
+
         List<String> filesInCWD = plainFilenamesIn(CWD);
         for (String fileInCWD : filesInCWD) {
             File file = join(CWD, fileInCWD);
@@ -862,13 +863,6 @@ public class Repository {
                 continue;
             }
 
-            /* Case 5. */
-            if (!splitPointTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !currentCommitTrackedFiles.containsKey(file)) {
-                checkOut(fileInCWD, givenBranchHeadsTrackedFiles);
-                add(fileInCWD);
-                continue;
-            }
-
             /* Case 6. */
             if (unModifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file)) {
                 rm(fileInCWD);
@@ -877,7 +871,7 @@ public class Repository {
 
             /* Case 8. */
             boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch && modifiedInTheGivenBranch && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
-            boolean oneChangedTheOtherDeleted = (modifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file)) || (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file));
+            boolean oneChangedTheOtherDeleted = modifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file);
             boolean fileAbsentAtTheSplitPointAndHasDifferentContents = !splitPointTrackedFiles.containsKey(file) && currentCommitTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
             boolean modifiedInDifferentWays = changedAndDifferentFromOther || oneChangedTheOtherDeleted ||fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
@@ -892,6 +886,31 @@ public class Repository {
                 add(fileInCWD);
             }
         }
+
+        for (File file : givenBranchHeadsTrackedFiles.keySet()) {
+            boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(givenBranchHeadsTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+
+            /* Case 5. */
+            if (!splitPointTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !currentCommitTrackedFiles.containsKey(file)) {
+                checkOut(file.getName(), givenBranchHeadsTrackedFiles);
+                add(file.getName());
+                continue;
+            } // Should not in the loop above, while these files do not exist in CWD.
+
+            /* Case 8. */
+            if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
+                conflict = true;
+                if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>");
+                } else if (!currentCommitTrackedFiles.containsKey(file)) {
+                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                } else {
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                }
+                add(file.getName());
+            }
+        }
+
         return conflict;
     }
 }

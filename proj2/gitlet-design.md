@@ -150,3 +150,4 @@ The .gitlet folder includes:
 5. **Pay attention to the passed-in parameters. Do not mess it up, which will cause tons of great pain to debug:)**
 6. **Be careful using a HashMap when serializing! The order of things within the HashMap is non-deterministic. The solution is to use a TreeMap which will always have the same order.**
 7. When we want to read the content of a file in the tracked files map, we need to first assess whether this file exists or not, otherwise we might make readContent error.
+8. In the merging cases, there are lots of files that are not in CWD but still need checkout, so we need iterate over not only CWD files, but also givenBranchHeadsTrackedFiles, in order not to forget these files.
