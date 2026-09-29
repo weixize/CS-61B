@@ -100,7 +100,7 @@ Checkout a specific commit, invoked by Main.java. Checkout a branch is a kind of
 Merges files from the given branch into the current branch.
 1. Check failure cases.
 2. Find the split point. Use a DFS to mark all ancestors of the given branch HEAD and use a BFS to find the given branch HEAD's nearest ancestor to the current commit.
-3. Process all the files in CWD based on the rules.
+3. Process all the files in CWD based on the rules. **Check all possible untracked file manipulation before processing.**
 4. Make a merge commit.
 
 ### Class 2: Commit.java
