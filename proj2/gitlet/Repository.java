@@ -36,6 +36,8 @@ public class Repository {
     public static final File STAGED_FOR_ADDITIONS = join(GITLET_DIR, "staged_for_Additions");
     /** Removal area. */
     public static final File STAGED_FOR_REMOVAL = join(GITLET_DIR, "staged_for_removal");
+    /** Remote repos. */
+    public static final File REMOTES_DIR = join(GITLET_DIR, "remotes");
 
 
     /**
@@ -55,6 +57,7 @@ public class Repository {
         BLOBS_DIR.mkdir();
         BRANCHES_DIR.mkdir();
         resetStagingArea();
+        REMOTES_DIR.mkdir();
 
         /* 3rd step of gitlet-design.md. */
         Commit initialCommit = new Commit();
@@ -1151,5 +1154,129 @@ public class Repository {
             }
         }
         return conflict;
+    }
+
+    /**
+     * Add remote, invoked by Main.java.
+     * @param remoteName the name of the remote
+     * @param nameOfRemoteDirectory the path to the remote
+     */
+    public static void addRemote(String remoteName, String nameOfRemoteDirectory) {
+        checkInitialized();
+        if (join(REMOTES_DIR, remoteName).exists()) {
+            message("A remote with that name already exists.");
+            System.exit(0);
+        }
+
+        String path = nameOfRemoteDirectory.replace('/', File.separatorChar);
+        writeContents(join(REMOTES_DIR, remoteName), path);
+    }
+
+    /**
+     * Remove a remote, invoked by Main.java.
+     * @param remoteName the name of the remote
+     */
+    public static void rmRemote(String remoteName) {
+        checkInitialized();
+        if (!join(REMOTES_DIR, remoteName).exists()) {
+            message("A remote with that name does not exist.");
+            System.exit(0);
+        }
+
+        join(REMOTES_DIR, remoteName).delete();
+    }
+
+    /**
+     * Attempts to append the current branch’s commits to the end of the given branch at the given remote.
+     * Invoked by Main.java.
+     * @param remoteName the name of the remote repo
+     * @param remoteBranchName the name of the remote branch
+     */
+    public static void push(String remoteName, String remoteBranchName) {
+        checkInitialized();
+
+        File remoteGitletDir = getRemoteGitletDir(remoteName);
+        checkRemoteDir(remoteGitletDir);
+
+        /* If the Gitlet system on the remote machine exists but does not have the input branch, then simply add the branch to the remote Gitlet. */
+        Commit currentCommit = searchCurrentCommit();
+        if (!join(join(remoteGitletDir, "branches"), remoteBranchName).exists()) {
+            addCommitToRemote(currentCommit, remoteGitletDir);
+            addBlobsToRemote(currentCommit, remoteGitletDir);
+            writeContents(join(join(remoteGitletDir, "branches"), remoteBranchName), sha1(serialize(currentCommit)));
+            return;
+        }
+
+        String remoteBranchesHead = readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName));
+        checkInTheHistoryOfLocalHead(currentCommit, remoteBranchesHead);
+
+        while (!sha1(serialize(currentCommit)).equals(remoteBranchesHead)) {
+            addCommitToRemote(currentCommit, remoteGitletDir);
+            addBlobsToRemote(currentCommit, remoteGitletDir);
+        }
+
+        writeContents(join(join(remoteGitletDir, "branches"), remoteBranchName), sha1(serialize(searchCurrentCommit())));
+    }
+
+    private static File getRemoteGitletDir(String remoteName) {
+        return join(CWD, readContentsAsString(join(REMOTES_DIR, remoteName)));
+    }
+
+    private static void checkInTheHistoryOfLocalHead(Commit currentLocalHead, String remoteBranchesHead) {
+        boolean isHistory = false;
+        while (currentLocalHead != null) {
+            if (sha1(serialize(currentLocalHead)).equals(remoteBranchesHead)) {
+                isHistory = true;
+                break;
+            }
+            currentLocalHead = Commit.fromFile(currentLocalHead.getParentsUID1());
+        }
+        if (!isHistory) {
+            message("Please pull down remote changes before pushing.");
+            System.exit(0);
+        }
+    }
+
+    private static void checkRemoteDir(File remoteGitletDir) {
+        if (!remoteGitletDir.exists()) {
+            message("Remote directory not found.");
+            System.exit(0);
+        }
+    }
+
+    private static void addCommitToRemote(Commit currentCommit, File remoteGitletDir) {
+        writeObject(join(join(remoteGitletDir, "commits"), sha1(serialize(currentCommit))), currentCommit);
+    }
+
+    private static void addBlobsToRemote(Commit currentCommit, File remoteGitletDir) {
+        TreeMap<File, String> currentTrackedFiles = currentCommit.getTrackedFiles();
+        for (File file : currentTrackedFiles.keySet()) {
+            String blobName = currentTrackedFiles.get(file);
+            if (!join(join(remoteGitletDir, "blobs"), blobName).exists()) {
+                writeContents(join(join(remoteGitletDir, "blobs"), blobName), readContents(join(BLOBS_DIR, blobName)));
+            }
+        }
+    }
+
+    public static void fetch(String remoteName, String remoteBranchName) {
+        checkInitialized();
+        File remoteGitletDir = getRemoteGitletDir(remoteName);
+        checkRemoteDir(remoteGitletDir);
+        checkRemoteBranch(remoteGitletDir, remoteBranchName);
+
+        String currentRemoteCommit = readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName));
+        while (currentRemoteCommit != null) {
+            Commit remoteCommit = readObject(join(join(remoteGitletDir, "commits"), currentRemoteCommit), Commit.class);
+            addCommitToLocal(currentRemoteCommit);
+            addBlobsToLocal(currentRemoteCommit);
+            currentRemoteCommit = remoteCommit.getParentsUID1();
+        }
+    }
+
+    private static void checkRemoteBranch(File remoteGitletDir, String remoteBranchName) {
+        if (!join(join(remoteGitletDir, "branches"), remoteBranchName).exists()) {
+            message("That remote does not have that branch.");
+            System.exit(0);
+        }
     }
 }

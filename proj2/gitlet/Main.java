@@ -82,6 +82,22 @@ public class Main {
                 checkOperandsNumbers(args, 2);
                 Repository.merge(args[1]);
                 break;
+            case "add-remote":
+                checkOperandsNumbers(args, 3);
+                Repository.addRemote(args[1], args[2]);
+                break;
+            case "rm-remote":
+                checkOperandsNumbers(args, 2);
+                Repository.rmRemote(args[1]);
+                break;
+            case "push":
+                checkOperandsNumbers(args, 3);
+                Repository.push(args[1], args[2]);
+                break;
+            case "fetch":
+                checkOperandsNumbers(args, 3);
+                Repository.fetch(args[1], args[2]);
+                break;
             default:
                 message("No command with that name exists.");
                 System.exit(0);
