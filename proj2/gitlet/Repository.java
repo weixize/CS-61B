@@ -230,8 +230,8 @@ public class Repository {
      * @param uid the uid of the latest commit
      */
     private static void moveHEADTo(String uid) {
-        File HeadBranchFile = join(BRANCHES_DIR, readContentsAsString(HEAD));
-        writeContents(HeadBranchFile, uid);
+        File headBranchFile = join(BRANCHES_DIR, readContentsAsString(HEAD));
+        writeContents(headBranchFile, uid);
     }
 
     /**
@@ -294,10 +294,10 @@ public class Repository {
         /* 1st step of gitlet-design.md. */
         Commit currentCommit = searchCurrentCommit();
         print(currentCommit);
-        String ParentsUid1 = currentCommit.getParentsUID1();
-        while (ParentsUid1 != null) {
-            currentCommit = Commit.fromFile(ParentsUid1);
-            ParentsUid1 = currentCommit.getParentsUID1();
+        String parentsUid1 = currentCommit.getParentsUID1();
+        while (parentsUid1 != null) {
+            currentCommit = Commit.fromFile(parentsUid1);
+            parentsUid1 = currentCommit.getParentsUID1();
             print(currentCommit);
         }
     }
@@ -382,12 +382,12 @@ public class Repository {
 
         /* Branches. */
         System.out.println("=== Branches ===");
-        String HeadBranch = readContentsAsString(HEAD);
+        String headBranch = readContentsAsString(HEAD);
         List<String> branchFileNames = plainFilenamesIn(BRANCHES_DIR);
         String[] branchFileNamesArray = branchFileNames.toArray(new String[0]);
         Arrays.sort(branchFileNamesArray);
         for (String branchFileName: branchFileNamesArray) {
-            if (Objects.equals(branchFileName, HeadBranch)) {
+            if (Objects.equals(branchFileName, headBranch)) {
                 System.out.print("*");
             }
             System.out.println(branchFileName);
@@ -425,16 +425,16 @@ public class Repository {
                 targetFileNames.add(entry.getKey().getName());
             }
             if (entry.getKey().exists()) {
-                if (!sha1(readContents(entry.getKey())).equals(entry.getValue()) &&
-                        !stagingArea.containsKey(entry.getKey()) &&
-                        !removalArea.contains(entry.getKey())) {
+                if (!sha1(readContents(entry.getKey())).equals(entry.getValue())
+                        && !stagingArea.containsKey(entry.getKey())
+                        && !removalArea.contains(entry.getKey())) {
                     targetFileNames.add(entry.getKey().getName());
                 }
             }
         }
         for (Map.Entry<File, String> entry : stagingArea.entrySet()) {
-            if (!entry.getKey().exists() ||
-                    !Objects.equals(sha1(readContents(entry.getKey())), entry.getValue())) {
+            if (!entry.getKey().exists()
+                    || !Objects.equals(sha1(readContents(entry.getKey())), entry.getValue())) {
                 targetFileNames.add(entry.getKey().getName());
             }
         }
@@ -889,17 +889,17 @@ public class Repository {
 
     /**
      * Process all the files in CWD.
-     * @param currentCommitTrackedFiles current branch tracked files
-     * @param givenBranchHeadsTrackedFiles given branch tracked files
-     * @param splitPointTrackedFiles split point tracked files
+     * @param c current branch tracked files
+     * @param g given branch tracked files
+     * @param s split point tracked files
      * @return whether there are conflicts
      */
     private static boolean processMergingFiles(TreeMap<File, String>
-                                                       currentCommitTrackedFiles,
+                                                       c,
                                                TreeMap<File, String>
-                                                       givenBranchHeadsTrackedFiles,
+                                                       g,
                                                TreeMap<File, String>
-                                                       splitPointTrackedFiles) {
+                                                       s) {
         boolean conflict = false;
 
         List<String> filesInCWD = plainFilenamesIn(CWD);
@@ -907,31 +907,31 @@ public class Repository {
             File file = join(CWD, fileInCWD);
 
             boolean unModifiedInTheCurrentBranch =
-                    currentCommitTrackedFiles.containsKey(file)
-                            && splitPointTrackedFiles.containsKey(file)
-                            && Objects.equals(currentCommitTrackedFiles.get(file),
-                            splitPointTrackedFiles.get(file));
+                    c.containsKey(file)
+                            && s.containsKey(file)
+                            && Objects.equals(c.get(file),
+                            s.get(file));
             boolean modifiedInTheCurrentBranch =
-                    currentCommitTrackedFiles.containsKey(file)
-                            && splitPointTrackedFiles.containsKey(file)
-                            && !Objects.equals(currentCommitTrackedFiles.get(file),
-                            splitPointTrackedFiles.get(file));
+                    c.containsKey(file)
+                            && s.containsKey(file)
+                            && !Objects.equals(c.get(file),
+                            s.get(file));
             boolean modifiedInTheGivenBranch =
-                    givenBranchHeadsTrackedFiles.containsKey(file)
-                            && splitPointTrackedFiles.containsKey(file)
-                            && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
-                            splitPointTrackedFiles.get(file));
+                    g.containsKey(file)
+                            && s.containsKey(file)
+                            && !Objects.equals(g.get(file),
+                            s.get(file));
 
             /* Case 1. */
             if (modifiedInTheGivenBranch && unModifiedInTheCurrentBranch) {
-                checkOut(fileInCWD, givenBranchHeadsTrackedFiles);
+                checkOut(fileInCWD, g);
                 add(fileInCWD);
                 continue;
             }
 
             /* Case 6. */
-            if (unModifiedInTheCurrentBranch &&
-                    !givenBranchHeadsTrackedFiles.containsKey(file)) {
+            if (unModifiedInTheCurrentBranch
+                    && !g.containsKey(file)) {
                 rm(fileInCWD);
                 continue;
             }
@@ -939,78 +939,78 @@ public class Repository {
             /* Case 8. */
             boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch
                     && modifiedInTheGivenBranch
-                    && !Objects.equals(currentCommitTrackedFiles.get(file),
-                    givenBranchHeadsTrackedFiles.get(file));
+                    && !Objects.equals(c.get(file),
+                    g.get(file));
             boolean oneChangedTheOtherDeleted = modifiedInTheCurrentBranch
-                    && !givenBranchHeadsTrackedFiles.containsKey(file);
+                    && !g.containsKey(file);
             boolean fileAbsentAtTheSplitPointAndHasDifferentContents =
-                    !splitPointTrackedFiles.containsKey(file) &&
-                            currentCommitTrackedFiles.containsKey(file)
-                            && givenBranchHeadsTrackedFiles.containsKey(file)
-                            && !Objects.equals(currentCommitTrackedFiles.get(file),
-                            givenBranchHeadsTrackedFiles.get(file));
+                    !s.containsKey(file)
+                            && c.containsKey(file)
+                            && g.containsKey(file)
+                            && !Objects.equals(c.get(file),
+                            g.get(file));
             boolean modifiedInDifferentWays = changedAndDifferentFromOther
                     || oneChangedTheOtherDeleted
                     || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
                 conflict = true;
-                if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
+                if (!g.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    currentCommitTrackedFiles.get(file))),
+                                    c.get(file))),
                             "=======\n", ">>>>>>>\n");
-                } else if (!currentCommitTrackedFiles.containsKey(file)) {
+                } else if (!c.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             "=======\n", readContents(join(BLOBS_DIR,
-                                    givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
+                                    g.get(file))), ">>>>>>>\n");
                 } else {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    currentCommitTrackedFiles.get(file))),
+                                    c.get(file))),
                             "=======\n", readContents(join(BLOBS_DIR,
-                                    givenBranchHeadsTrackedFiles.get(file))),
+                                    g.get(file))),
                             ">>>>>>>\n");
                 }
                 add(fileInCWD);
             }
         }
 
-        for (File file : givenBranchHeadsTrackedFiles.keySet()) {
+        for (File file : g.keySet()) {
             boolean modifiedInTheGivenBranch =
-                    givenBranchHeadsTrackedFiles.containsKey(file)
-                            && splitPointTrackedFiles.containsKey(file)
-                            && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
-                            splitPointTrackedFiles.get(file));
+                    g.containsKey(file)
+                            && s.containsKey(file)
+                            && !Objects.equals(g.get(file),
+                            s.get(file));
 
             /* Case 5. */
-            if (!splitPointTrackedFiles.containsKey(file) &&
-                    givenBranchHeadsTrackedFiles.containsKey(file)
-                    && !currentCommitTrackedFiles.containsKey(file)) {
-                checkOut(file.getName(), givenBranchHeadsTrackedFiles);
+            if (!s.containsKey(file)
+                    && g.containsKey(file)
+                    && !c.containsKey(file)) {
+                checkOut(file.getName(), g);
                 add(file.getName());
                 continue;
             } // Should not in the loop above, while these files do not exist in CWD.
 
             /* Case 8. */
-            if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
+            if (modifiedInTheGivenBranch && !c.containsKey(file)) {
                 conflict = true;
-                if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
+                if (!g.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    currentCommitTrackedFiles.get(file))),
+                                    c.get(file))),
                             "=======\n", ">>>>>>>\n");
-                } else if (!currentCommitTrackedFiles.containsKey(file)) {
+                } else if (!c.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             "=======\n",
                             readContents(join(BLOBS_DIR,
-                                    givenBranchHeadsTrackedFiles.get(file))),
+                                    g.get(file))),
                             ">>>>>>>\n");
                 } else {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    currentCommitTrackedFiles.get(file))),
+                                    c.get(file))),
                             "=======\n", readContents(join(BLOBS_DIR,
-                                    givenBranchHeadsTrackedFiles.get(file))),
+                                    g.get(file))),
                             ">>>>>>>\n");
                 }
                 add(file.getName());
@@ -1106,8 +1106,8 @@ public class Repository {
     private static void checkUntrackedFile(File checkedOutFile,
                                            HashSet<String> untrackedFileNames) {
         if (checkedOutFile.exists() && untrackedFileNames.contains(checkedOutFile.getName())) {
-            message("There is an untracked file in the way; delete it, " +
-                    "or add and commit it first.");
+            message("There is an untracked file in the way; delete it, "
+                    + "or add and commit it first.");
             System.exit(0);
         }
     }
