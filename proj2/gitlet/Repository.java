@@ -75,7 +75,6 @@ public class Repository {
      * A helper method, create a new branch.
      * @param name the name of the new branch
      * @param commitUID the UID of the commit the branch points at
-     * @throws IOException
      */
     private static void createBranch(String name, String commitUID) {
         File branchFile = join(BRANCHES_DIR, name);
@@ -149,7 +148,6 @@ public class Repository {
      * I/O helper function.
      * @param file file to be staged
      * @param currentStagingArea current staging area
-     * @throws IOException
      */
     private static void addSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) {
         currentStagingArea.put(file, sha1(readContents(file)));
@@ -159,7 +157,6 @@ public class Repository {
     /**
      * Create a blob for FILE if it does not exist.
      * @param file the file we create blob for
-     * @throws IOException
      */
     private static void createBlob(File file) {
         File blob = join(BLOBS_DIR, sha1(readContents(file)));
@@ -183,8 +180,10 @@ public class Repository {
     /**
      * Create a commit, invoked by Main.java.
      * @param msg the message of a commit
+     * @param merge whether this is a merge commit
+     * @param givenBranchHEAD the given commit to merge
      */
-    public static void commit(String msg) {
+    public static void commit(String msg, boolean merge, Commit givenBranchHEAD) {
         checkInitialized();
 
         /* 1st step of gitlet-design.md. */
@@ -209,7 +208,12 @@ public class Repository {
         resetStagingArea();
 
         /* 3rd step of gitlet-design.md. */
-        Commit newCommit = new Commit(msg, sha1(serialize(lastestCommit)), lastestTrackedFiles);
+        Commit newCommit;
+        if (!merge) {
+            newCommit = new Commit(msg, sha1(serialize(lastestCommit)), lastestTrackedFiles);
+        } else {
+            newCommit = new Commit(msg, sha1(serialize(lastestCommit)), sha1(serialize(givenBranchHEAD)), lastestTrackedFiles);
+        }
         newCommit.saveCommit();
 
         /* 4th step of gitlet-design.md. */
@@ -700,17 +704,47 @@ public class Repository {
         }
     }
 
+    /**
+     * Merges files from the given branch into the current branch.
+     * Invoked by Main.java.
+     * @param branchName the name of the given branch
+     */
     public static void merge(String branchName) {
+        /* 1st step of gitlet-design.md. */
         checkInitialized();
         checkStagedAdditionsOrRemovals();
         checkBranchExists(branchName);
         checkMergeABranchWithItself(branchName);
 
+        /* 2nd step of gitlet-design.md. */
         Commit currentCommit = searchCurrentCommit();
         Commit givenBranchHeads = searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName)));
         Commit splitPoint = getSplitPoint(givenBranchHeads, currentCommit);
+        if (sha1(serialize(splitPoint)).equals(sha1(serialize(givenBranchHeads)))) {
+            message("Given branch is an ancestor of the current branch.");
+            return;
+        } else if (sha1(serialize(splitPoint)).equals(sha1(serialize(currentCommit)))) {
+            checkoutBranchName(branchName);
+            message("Current branch fast-forwarded.");
+            return;
+        }
+
+        /* 3rd step of gitlet-design.md. */
+        TreeMap<File, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
+        TreeMap<File, String> givenBranchHeadsTrackedFiles = givenBranchHeads.getTrackedFiles();
+        TreeMap<File, String> splitPointTrackedFiles = splitPoint.getTrackedFiles();
+        boolean conflict = processMergingFiles(currentCommitTrackedFiles, givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
+
+        /* 4th step of gitlet-design.md. */
+        commit("Merged " + branchName + " into " + readContentsAsString(HEAD) + ".", true, givenBranchHeads);
+        if (conflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
     }
 
+    /**
+     * Check if there are staged files.
+     */
     private static void checkStagedAdditionsOrRemovals() {
         if (!readObject(STAGED_FOR_ADDITIONS, HashMap.class).isEmpty() || !readObject(STAGED_FOR_REMOVAL, HashSet.class).isEmpty()) {
             message("You have uncommitted changes.");
@@ -718,6 +752,10 @@ public class Repository {
         }
     }
 
+    /**
+     * Check if the given branch exists.
+     * @param branchName the name of the given branch
+     */
     private static void checkBranchExists(String branchName) {
         File branchFile = join(BRANCHES_DIR, branchName);
         if (!branchFile.exists()) {
@@ -726,14 +764,19 @@ public class Repository {
         }
     }
 
+    /**
+     * Check if the given branch is the same as the current branch.
+     * @param branchName the name of the given branch
+     */
     private static void checkMergeABranchWithItself(String branchName) {
-        if (Objects.equals(sha1(serialize(searchCurrentCommit())), readContentsAsString(join(BRANCHES_DIR, branchName)))) {
+        if (Objects.equals(readContentsAsString(HEAD), branchName)) {
             message("Cannot merge a branch with itself.");
             System.exit(0);
         }
     }
 
     /**
+     * Get the split point.
      * Will break tie based on the distance from COMMIT2.
      * @param commit1 given commit
      * @param commit2 current HEAD commit
@@ -745,6 +788,11 @@ public class Repository {
         return findSplitPointBasedOnAncestorsOfCommit1(sha1(serialize(commit2)), ancestorsOfCommit1);
     }
 
+    /**
+     * Mark all the ancestors of commit1.
+     * @param commitUID commit1's UID
+     * @param ancestors ancestors of commit1
+     */
     private static void addToSet(String commitUID, HashSet<String> ancestors) {
         if (ancestors.contains(commitUID)) {
             return;
@@ -763,6 +811,12 @@ public class Repository {
         }
     }
 
+    /**
+     * BFS commit1's nearest ancestor to commit2.
+     * @param commitUID the UID of commit2
+     * @param ancestorsOfCommit1 ancestors of commit1
+     * @return commit1's nearest ancestor to commit2
+     */
     private static Commit findSplitPointBasedOnAncestorsOfCommit1(String commitUID, HashSet<String> ancestorsOfCommit1) {
         HashSet<String> explored = new HashSet<>();
         Deque<String> fringe = new ArrayDeque<>();
@@ -782,5 +836,62 @@ public class Repository {
             }
         }
         return null;
+    }
+
+    /**
+     * Process all the files in CWD.
+     * @param currentCommitTrackedFiles current branch tracked files
+     * @param givenBranchHeadsTrackedFiles given branch tracked files
+     * @param splitPointTrackedFiles split point tracked files
+     * @return whether there are conflicts
+     */
+    private static boolean processMergingFiles(TreeMap<File, String> currentCommitTrackedFiles, TreeMap<File, String> givenBranchHeadsTrackedFiles, TreeMap<File, String> splitPointTrackedFiles) {
+        boolean conflict = false;
+        List<String> filesInCWD = plainFilenamesIn(CWD);
+        for (String fileInCWD : filesInCWD) {
+            File file = join(CWD, fileInCWD);
+
+            boolean unModifiedInTheCurrentBranch = currentCommitTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && Objects.equals(currentCommitTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+            boolean modifiedInTheCurrentBranch = currentCommitTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(currentCommitTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+            boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(givenBranchHeadsTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+
+            /* Case 1. */
+            if (modifiedInTheGivenBranch && unModifiedInTheCurrentBranch) {
+                checkOut(fileInCWD, givenBranchHeadsTrackedFiles);
+                add(fileInCWD);
+                continue;
+            }
+
+            /* Case 5. */
+            if (!splitPointTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !currentCommitTrackedFiles.containsKey(file)) {
+                checkOut(fileInCWD, givenBranchHeadsTrackedFiles);
+                add(fileInCWD);
+                continue;
+            }
+
+            /* Case 6. */
+            if (unModifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file)) {
+                rm(fileInCWD);
+                continue;
+            }
+
+            /* Case 8. */
+            boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch && modifiedInTheGivenBranch && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
+            boolean oneChangedTheOtherDeleted = (modifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file)) || (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file));
+            boolean fileAbsentAtTheSplitPointAndHasDifferentContents = !splitPointTrackedFiles.containsKey(file) && currentCommitTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
+            boolean modifiedInDifferentWays = changedAndDifferentFromOther || oneChangedTheOtherDeleted ||fileAbsentAtTheSplitPointAndHasDifferentContents;
+            if (modifiedInDifferentWays) {
+                conflict = true;
+                if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>");
+                } else if (!currentCommitTrackedFiles.containsKey(file)) {
+                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                } else {
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                }
+                add(fileInCWD);
+            }
+        }
+        return conflict;
     }
 }

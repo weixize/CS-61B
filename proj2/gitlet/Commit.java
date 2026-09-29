@@ -4,7 +4,6 @@ package gitlet;
 import static gitlet.Utils.*;
 import static gitlet.Repository.*;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
 import java.util.TreeMap;
@@ -61,7 +60,6 @@ public class Commit implements Serializable {
 
     /**
      * Serialize itself to the target place.
-     * @throws IOException
      */
     public void saveCommit() {
         File commitFile = join(COMMITS_DIR, sha1(serialize(this)));
@@ -75,8 +73,8 @@ public class Commit implements Serializable {
     /**
      * Constructor for not-initial commits.
      * @param msg message
-     * @param parentsUID1 UID of parent commit I.
-     * @param trackedFiles non-metadata.
+     * @param parentsUID1 UID of parent commit I
+     * @param trackedFiles non-metadata
      */
     public Commit(String msg, String parentsUID1, TreeMap<File, String> trackedFiles) {
         message = msg;
@@ -85,6 +83,23 @@ public class Commit implements Serializable {
         parent2 = null;
         this.parentsUID1 = parentsUID1;
         parentsUID2 = null;
+        this.trackedFiles = trackedFiles;
+    }
+
+    /**
+     * Constructor for merge commits.
+     * @param msg message
+     * @param parentsUID1 UID of parent commit I
+     * @param parentsUID2 UID of parent commit II
+     * @param trackedFiles non-metadata
+     */
+    public Commit(String msg, String parentsUID1, String parentsUID2, TreeMap<File, String> trackedFiles) {
+        message = msg;
+        date = new Date();
+        parent1 = null;
+        parent2 = null;
+        this.parentsUID1 = parentsUID1;
+        this.parentsUID2 = parentsUID2;
         this.trackedFiles = trackedFiles;
     }
 

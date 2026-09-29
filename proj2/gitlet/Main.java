@@ -34,7 +34,7 @@ public class Main {
             // TODO: FILL THE REST IN
             case "commit":
                 checkOperandsNumbers(args, 2);
-                Repository.commit(args[1]);
+                Repository.commit(args[1], false, null);
                 break;
             case "rm":
                 checkOperandsNumbers(args, 2);

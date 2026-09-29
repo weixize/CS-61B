@@ -34,7 +34,7 @@ Stage files, invoked by Main.java.
 
 Used to manipulate the .gitlet folder. See docs in Repository.java.
 
-#### commit(String msg)
+#### commit(String msg, boolean merge, Commit givenBranchHEAD)
 
 Create a commit, invoked by Main.java.
 1. Check Failure cases.
@@ -95,6 +95,14 @@ Remove the given branch, invoked by Main.java.
 
 Checkout a specific commit, invoked by Main.java. Checkout a branch is a kind of checking a specific commit, so this method has the same five steps as checkoutBranchName(String branchName).
 
+#### merge(String branchName)
+
+Merges files from the given branch into the current branch.
+1. Check failure cases.
+2. Find the split point. Use a DFS to mark all ancestors of the given branch HEAD and use a BFS to find the given branch HEAD's nearest ancestor to the current commit.
+3. Process all the files in CWD based on the rules.
+4. Make a merge commit.
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.
@@ -111,6 +119,10 @@ Serialize the commit to the target directory.
 #### Commit(String msg, String parentsUID1, HashMap<File, String> trackedFiles)
 
 Constructor for not-initial commits.
+
+#### Commit(String msg, String parentsUID1, String parentsUID2, TreeMap<File, String> trackedFiles)
+
+Constructor for merge commits.
 
 #### fromFile(String UID)
 
