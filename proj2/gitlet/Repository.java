@@ -774,7 +774,7 @@ public class Repository {
         TreeMap<File, String> splitPointTrackedFiles = splitPoint.getTrackedFiles();
         checkUntrackedFile(currentCommitTrackedFiles,
                 givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
-        boolean conflict = p(currentCommitTrackedFiles,
+        boolean conflict = processMergingFiles(currentCommitTrackedFiles,
                 givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
 
         /* 4th step of gitlet-design.md. */
@@ -889,131 +889,125 @@ public class Repository {
 
     /**
      * Process all the files in CWD.
-     * @param c current branch tracked files
-     * @param g given branch tracked files
-     * @param s split point tracked files
+     * @param currentCommitTrackedFiles current branch tracked files
+     * @param givenBranchHeadsTrackedFiles given branch tracked files
+     * @param splitPointTrackedFiles split point tracked files
      * @return whether there are conflicts
      */
-    private static boolean p(TreeMap<File, String> c,
-                             TreeMap<File, String> g,
-                             TreeMap<File, String> s) {
+    private static boolean processMergingFiles(TreeMap<File, String>
+                                                       currentCommitTrackedFiles,
+                                               TreeMap<File, String>
+                                                       givenBranchHeadsTrackedFiles,
+                                               TreeMap<File, String>
+                                                       splitPointTrackedFiles) {
         boolean conflict = false;
-
         List<String> filesInCWD = plainFilenamesIn(CWD);
         for (String fileInCWD : filesInCWD) {
             File file = join(CWD, fileInCWD);
-
             boolean unModifiedInTheCurrentBranch =
-                    c.containsKey(file)
-                            && s.containsKey(file)
-                            && Objects.equals(c.get(file),
-                            s.get(file));
+                    currentCommitTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && Objects.equals(currentCommitTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
             boolean modifiedInTheCurrentBranch =
-                    c.containsKey(file)
-                            && s.containsKey(file)
-                            && !Objects.equals(c.get(file),
-                            s.get(file));
+                    currentCommitTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(currentCommitTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
             boolean modifiedInTheGivenBranch =
-                    g.containsKey(file)
-                            && s.containsKey(file)
-                            && !Objects.equals(g.get(file),
-                            s.get(file));
-
+                    givenBranchHeadsTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
             /* Case 1. */
             if (modifiedInTheGivenBranch && unModifiedInTheCurrentBranch) {
-                checkOut(fileInCWD, g);
+                checkOut(fileInCWD, givenBranchHeadsTrackedFiles);
                 add(fileInCWD);
                 continue;
             }
-
             /* Case 6. */
             if (unModifiedInTheCurrentBranch
-                    && !g.containsKey(file)) {
+                    && !givenBranchHeadsTrackedFiles.containsKey(file)) {
                 rm(fileInCWD);
                 continue;
             }
-
             /* Case 8. */
             boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch
                     && modifiedInTheGivenBranch
-                    && !Objects.equals(c.get(file),
-                    g.get(file));
+                    && !Objects.equals(currentCommitTrackedFiles.get(file),
+                    givenBranchHeadsTrackedFiles.get(file));
             boolean oneChangedTheOtherDeleted = modifiedInTheCurrentBranch
-                    && !g.containsKey(file);
+                    && !givenBranchHeadsTrackedFiles.containsKey(file);
             boolean fileAbsentAtTheSplitPointAndHasDifferentContents =
-                    !s.containsKey(file)
-                            && c.containsKey(file)
-                            && g.containsKey(file)
-                            && !Objects.equals(c.get(file),
-                            g.get(file));
+                    !splitPointTrackedFiles.containsKey(file)
+                            && currentCommitTrackedFiles.containsKey(file)
+                            && givenBranchHeadsTrackedFiles.containsKey(file)
+                            && !Objects.equals(currentCommitTrackedFiles.get(file),
+                            givenBranchHeadsTrackedFiles.get(file));
             boolean modifiedInDifferentWays = changedAndDifferentFromOther
                     || oneChangedTheOtherDeleted
                     || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
                 conflict = true;
-                if (!g.containsKey(file)) {
+                if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    c.get(file))),
+                                    currentCommitTrackedFiles.get(file))),
                             "=======\n", ">>>>>>>\n");
-                } else if (!c.containsKey(file)) {
+                } else if (!currentCommitTrackedFiles.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             "=======\n", readContents(join(BLOBS_DIR,
-                                    g.get(file))), ">>>>>>>\n");
+                                    givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
                 } else {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    c.get(file))),
+                                    currentCommitTrackedFiles.get(file))),
                             "=======\n", readContents(join(BLOBS_DIR,
-                                    g.get(file))),
+                                    givenBranchHeadsTrackedFiles.get(file))),
                             ">>>>>>>\n");
                 }
                 add(fileInCWD);
             }
         }
-
-        for (File file : g.keySet()) {
+        for (File file : givenBranchHeadsTrackedFiles.keySet()) {
             boolean modifiedInTheGivenBranch =
-                    g.containsKey(file)
-                            && s.containsKey(file)
-                            && !Objects.equals(g.get(file),
-                            s.get(file));
-
+                    givenBranchHeadsTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
             /* Case 5. */
-            if (!s.containsKey(file)
-                    && g.containsKey(file)
-                    && !c.containsKey(file)) {
-                checkOut(file.getName(), g);
+            if (!splitPointTrackedFiles.containsKey(file)
+                    && givenBranchHeadsTrackedFiles.containsKey(file)
+                    && !currentCommitTrackedFiles.containsKey(file)) {
+                checkOut(file.getName(), givenBranchHeadsTrackedFiles);
                 add(file.getName());
                 continue;
             } // Should not in the loop above, while these files do not exist in CWD.
-
             /* Case 8. */
-            if (modifiedInTheGivenBranch && !c.containsKey(file)) {
+            if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
                 conflict = true;
-                if (!g.containsKey(file)) {
+                if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    c.get(file))),
+                                    currentCommitTrackedFiles.get(file))),
                             "=======\n", ">>>>>>>\n");
-                } else if (!c.containsKey(file)) {
+                } else if (!currentCommitTrackedFiles.containsKey(file)) {
                     writeContents(file, "<<<<<<< HEAD\n",
                             "=======\n",
                             readContents(join(BLOBS_DIR,
-                                    g.get(file))),
+                                    givenBranchHeadsTrackedFiles.get(file))),
                             ">>>>>>>\n");
                 } else {
                     writeContents(file, "<<<<<<< HEAD\n",
                             readContents(join(BLOBS_DIR,
-                                    c.get(file))),
+                                    currentCommitTrackedFiles.get(file))),
                             "=======\n", readContents(join(BLOBS_DIR,
-                                    g.get(file))),
+                                    givenBranchHeadsTrackedFiles.get(file))),
                             ">>>>>>>\n");
                 }
                 add(file.getName());
             }
         }
-
         return conflict;
     }
 
