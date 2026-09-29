@@ -1106,10 +1106,7 @@ public class Repository {
                     || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
                 conflict = true;
-                if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
-                    dealWithConflict(givenBranchHeadsTrackedFiles, file,
-                            currentCommitTrackedFiles);
-                }
+                dealWithConflict(givenBranchHeadsTrackedFiles, file, currentCommitTrackedFiles);
                 add(fileInCWD);
             }
         }
