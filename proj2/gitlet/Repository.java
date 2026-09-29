@@ -1,15 +1,12 @@
 package gitlet;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *  This class has many functions related to the creation & manipulation of the repo.
  *  And it is also the bridge connecting Main.java and lots of objects in Gitlet.
@@ -17,7 +14,6 @@ import static gitlet.Utils.*;
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
@@ -41,7 +37,6 @@ public class Repository {
     /** Removal area. */
     public static final File STAGED_FOR_REMOVAL = join(GITLET_DIR, "staged_for_removal");
 
-    /* TODO: fill in the rest of this class. */
 
     /**
      * Initialize the Gitlet repo.
@@ -119,7 +114,8 @@ public class Repository {
      * @return HEAD Commit object
      */
     private static Commit searchCurrentCommit() {
-        return Commit.fromFile(readContentsAsString(join(BRANCHES_DIR, readContentsAsString(HEAD))));
+        return Commit.fromFile(readContentsAsString(join(BRANCHES_DIR,
+                readContentsAsString(HEAD))));
     }
 
     /**
@@ -127,7 +123,8 @@ public class Repository {
      * @param file file to be removed from staging area
      * @param currentStagingArea current staging area
      */
-    private static void removeSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) {
+    private static void removeSomethingInStagingArea(File file,
+                                                     HashMap<File, String> currentStagingArea) {
         if (currentStagingArea.remove(file) != null) {
             writeObject(STAGED_FOR_ADDITIONS, currentStagingArea);
         }
@@ -149,7 +146,8 @@ public class Repository {
      * @param file file to be staged
      * @param currentStagingArea current staging area
      */
-    private static void addSomethingInStagingArea(File file, HashMap<File, String> currentStagingArea) {
+    private static void addSomethingInStagingArea(File file,
+                                                  HashMap<File, String> currentStagingArea) {
         currentStagingArea.put(file, sha1(readContents(file)));
         writeObject(STAGED_FOR_ADDITIONS, currentStagingArea);
     }
@@ -187,7 +185,8 @@ public class Repository {
         checkInitialized();
 
         /* 1st step of gitlet-design.md. */
-        HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS,
+                HashMap.class);
         HashSet<File> currentRemovalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
         if (currentRemovalArea.isEmpty() && currentStagingArea.isEmpty()) {
             message("No changes added to the commit.");
@@ -200,7 +199,8 @@ public class Repository {
 
         /* 2nd step of gitlet-design.md. */
         Commit lastestCommit = searchCurrentCommit();
-        TreeMap<File, String> lastestTrackedFiles = new TreeMap<>(lastestCommit.getTrackedFiles());
+        TreeMap<File, String> lastestTrackedFiles =
+                new TreeMap<>(lastestCommit.getTrackedFiles());
         for (File file : currentRemovalArea) {
             lastestTrackedFiles.remove(file);
         }
@@ -210,9 +210,14 @@ public class Repository {
         /* 3rd step of gitlet-design.md. */
         Commit newCommit;
         if (!merge) {
-            newCommit = new Commit(msg, sha1(serialize(lastestCommit)), lastestTrackedFiles);
+            newCommit = new Commit(msg,
+                    sha1(serialize(lastestCommit)),
+                    lastestTrackedFiles);
         } else {
-            newCommit = new Commit(msg, sha1(serialize(lastestCommit)), sha1(serialize(givenBranchHEAD)), lastestTrackedFiles);
+            newCommit = new Commit(msg,
+                    sha1(serialize(lastestCommit)),
+                    sha1(serialize(givenBranchHEAD)),
+                    lastestTrackedFiles);
         }
         newCommit.saveCommit();
 
@@ -221,12 +226,12 @@ public class Repository {
     }
 
     /**
-     * Overwrite the HEAD branch with the UID of the latest commit.
-     * @param UID the UID of the latest commit
+     * Overwrite the HEAD branch with the uid of the latest commit.
+     * @param uid the uid of the latest commit
      */
-    private static void moveHEADTo(String UID) {
-        File HEADBranchFile = join(BRANCHES_DIR, readContentsAsString(HEAD));
-        writeContents(HEADBranchFile, UID);
+    private static void moveHEADTo(String uid) {
+        File HeadBranchFile = join(BRANCHES_DIR, readContentsAsString(HEAD));
+        writeContents(HeadBranchFile, uid);
     }
 
     /**
@@ -246,9 +251,11 @@ public class Repository {
 
         /* 1st step of gitlet-design.md. */
         File fileToBeRemoved = join(CWD, fileName);
-        HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS,
+                HashMap.class);
         Commit currentCommit = searchCurrentCommit();
-        TreeMap<File, String> lastestTrackedFiles = new TreeMap<>(currentCommit.getTrackedFiles());
+        TreeMap<File, String> lastestTrackedFiles =
+                new TreeMap<>(currentCommit.getTrackedFiles());
         boolean staged = currentStagingArea.get(fileToBeRemoved) != null;
         boolean trackedByHAEDCommit = lastestTrackedFiles.get(fileToBeRemoved) != null;
         if (!staged && !trackedByHAEDCommit) {
@@ -287,10 +294,10 @@ public class Repository {
         /* 1st step of gitlet-design.md. */
         Commit currentCommit = searchCurrentCommit();
         print(currentCommit);
-        String ParentsUID1 = currentCommit.getParentsUID1();
-        while (ParentsUID1 != null) {
-            currentCommit = Commit.fromFile(ParentsUID1);
-            ParentsUID1 = currentCommit.getParentsUID1();
+        String ParentsUid1 = currentCommit.getParentsUID1();
+        while (ParentsUid1 != null) {
+            currentCommit = Commit.fromFile(ParentsUid1);
+            ParentsUid1 = currentCommit.getParentsUID1();
             print(currentCommit);
         }
     }
@@ -375,12 +382,12 @@ public class Repository {
 
         /* Branches. */
         System.out.println("=== Branches ===");
-        String HEADBranch = readContentsAsString(HEAD);
+        String HeadBranch = readContentsAsString(HEAD);
         List<String> branchFileNames = plainFilenamesIn(BRANCHES_DIR);
         String[] branchFileNamesArray = branchFileNames.toArray(new String[0]);
         Arrays.sort(branchFileNamesArray);
         for (String branchFileName: branchFileNamesArray) {
-            if (Objects.equals(branchFileName, HEADBranch)) {
+            if (Objects.equals(branchFileName, HeadBranch)) {
                 System.out.print("*");
             }
             System.out.println(branchFileName);
@@ -418,13 +425,16 @@ public class Repository {
                 targetFileNames.add(entry.getKey().getName());
             }
             if (entry.getKey().exists()) {
-                if (!sha1(readContents(entry.getKey())).equals(entry.getValue()) && !stagingArea.containsKey(entry.getKey()) && !removalArea.contains(entry.getKey())) {
+                if (!sha1(readContents(entry.getKey())).equals(entry.getValue()) &&
+                        !stagingArea.containsKey(entry.getKey()) &&
+                        !removalArea.contains(entry.getKey())) {
                     targetFileNames.add(entry.getKey().getName());
                 }
             }
         }
         for (Map.Entry<File, String> entry : stagingArea.entrySet()) {
-            if (!entry.getKey().exists() || !Objects.equals(sha1(readContents(entry.getKey())), entry.getValue())) {
+            if (!entry.getKey().exists() ||
+                    !Objects.equals(sha1(readContents(entry.getKey())), entry.getValue())) {
                 targetFileNames.add(entry.getKey().getName());
             }
         }
@@ -442,7 +452,9 @@ public class Repository {
 
         /* Untracked Files. */
         System.out.println("=== Untracked Files ===");
-        String[] fileNamesArray = searchUntrackedFilesNames(stagingArea, currentTrackedFiles, removalArea);
+        String[] fileNamesArray = searchUntrackedFilesNames(stagingArea,
+                currentTrackedFiles,
+                removalArea);
         sortAndPrint(fileNamesArray);
     }
 
@@ -474,13 +486,13 @@ public class Repository {
 
     /**
      * Checkout file in the COMMIT ID commit, invoked by Main.java.
-     * @param CommitId ID of the given commit
+     * @param commitId ID of the given commit
      * @param fileName the name of the to-be-checked file
      */
-    public static void checkoutCommitIdFileName(String CommitId, String fileName) {
+    public static void checkoutCommitIdFileName(String commitId, String fileName) {
         /* 1st step of gitlet-design.md. */
         checkInitialized();
-        TreeMap<File, String> trackedFiles = searchCommitByUID(CommitId).getTrackedFiles();
+        TreeMap<File, String> trackedFiles = searchCommitByUID(commitId).getTrackedFiles();
         checkFileExists(fileName, trackedFiles);
 
         /* 2nd step of gitlet-design.md. */
@@ -497,17 +509,25 @@ public class Repository {
         checkBranch(branchName);
 
         /* 2nd step of gitlet-design.md. */
-        TreeMap<File, String> trackedFilesInCheckedOutBranch = searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName))).getTrackedFiles();
-        TreeMap<File, String> trackedFilesInCurrentBranch = searchCurrentCommit().getTrackedFiles();
+        TreeMap<File, String> trackedFilesInCheckedOutBranch =
+                searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName)))
+                        .getTrackedFiles();
+        TreeMap<File, String> trackedFilesInCurrentBranch =
+                searchCurrentCommit().getTrackedFiles();
         HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
         HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
-        HashSet<String> untrackedFileNames = new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea, trackedFilesInCurrentBranch, removalArea)));
+        HashSet<String> untrackedFileNames =
+                new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea,
+                        trackedFilesInCurrentBranch,
+                        removalArea)));
 
         /* 3rd step of gitlet-design.md. */
-        checkOutAllTheFilesTrackedByTheGivenCommit(trackedFilesInCheckedOutBranch, untrackedFileNames);
+        checkOutAllTheFilesTrackedByTheGivenCommit(trackedFilesInCheckedOutBranch,
+                untrackedFileNames);
 
         /* 4th step of gitlet-design.md. */
-        removesTrackedFilesThatAreNotPresentInThatCommit(trackedFilesInCurrentBranch, trackedFilesInCheckedOutBranch);
+        removesTrackedFilesThatAreNotPresentInThatCommit(trackedFilesInCurrentBranch,
+                trackedFilesInCheckedOutBranch);
 
         /* 5th step of gitlet-design.md. */
         resetStagingArea();
@@ -529,12 +549,12 @@ public class Repository {
 
     /**
      * Search commit based on the given UID.
-     * @param UID the UID of the target Commit
+     * @param uid the UID of the target Commit
      * @return the target Commit object
      */
-    private static Commit searchCommitByUID(String UID) {
-        if (UID.length() == 40) {
-            File commitFile = join(COMMITS_DIR, UID);
+    private static Commit searchCommitByUID(String uid) {
+        if (uid.length() == 40) {
+            File commitFile = join(COMMITS_DIR, uid);
             if (!commitFile.exists()) { //UID长度是40但是还是有可能没有这个commit.
                 message("No commit with that id exists.");
                 System.exit(0);
@@ -543,7 +563,7 @@ public class Repository {
         } else {
             List<String> commitsNames = plainFilenamesIn(COMMITS_DIR);
             for (String commitName : commitsNames) {
-                if (commitName.startsWith(UID)) {
+                if (commitName.startsWith(uid)) {
                     return readObject(join(COMMITS_DIR, commitName), Commit.class);
                 }
             }
@@ -586,14 +606,19 @@ public class Repository {
      * @param removalArea the removal area
      * @return a String array contains the names of all the untracked files in CWD
      */
-    private static String[] searchUntrackedFilesNames(HashMap<File, String> stagingArea, TreeMap<File, String> currentTrackedFiles, HashSet<File> removalArea) {
+    private static String[] searchUntrackedFilesNames(HashMap<File, String> stagingArea,
+                                                      TreeMap<File, String>
+                                                              currentTrackedFiles,
+                                                      HashSet<File> removalArea) {
         LinkedList<String> untrackedFileNames = new LinkedList<>();
         String[] fileNamesInCWD = plainFilenamesIn(CWD).toArray(new String[0]);
         for (String fileNameInCWD : fileNamesInCWD) {
-            if (!stagingArea.containsKey(join(CWD, fileNameInCWD)) && !currentTrackedFiles.containsKey(join(CWD, fileNameInCWD))) {
+            if (!stagingArea.containsKey(join(CWD, fileNameInCWD))
+                    && !currentTrackedFiles.containsKey(join(CWD, fileNameInCWD))) {
                 untrackedFileNames.add(fileNameInCWD);
             }
-            if (removalArea.contains(join(CWD, fileNameInCWD)) && join(CWD, fileNameInCWD).exists()) {
+            if (removalArea.contains(join(CWD, fileNameInCWD))
+                    && join(CWD, fileNameInCWD).exists()) {
                 untrackedFileNames.add(fileNameInCWD);
             }
         }
@@ -632,7 +657,8 @@ public class Repository {
         checkBranchForRemoval(branchName);
 
         /* 1st step of gitlet-design.md. */
-        join(BRANCHES_DIR, branchName).delete(); //restrictedDelete() can not be used since there is no .gitlet aside the branch file.
+        join(BRANCHES_DIR, branchName).delete();
+        //restrictedDelete() can not be used since there is no .gitlet aside the branch file.
     }
 
     /**
@@ -656,21 +682,31 @@ public class Repository {
         checkInitialized();
 
         /* 2nd step of gitlet-design.md. */
-        TreeMap<File, String> trackedFilesInCheckedOutCommit = searchCommitByUID(commitId).getTrackedFiles();
-        TreeMap<File, String> trackedFilesInCurrentCommit = searchCurrentCommit().getTrackedFiles();
-        HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
-        HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
-        HashSet<String> untrackedFileNames = new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea, trackedFilesInCurrentCommit, removalArea)));
+        TreeMap<File, String> trackedFilesInCheckedOutCommit =
+                searchCommitByUID(commitId).getTrackedFiles();
+        TreeMap<File, String> trackedFilesInCurrentCommit =
+                searchCurrentCommit().getTrackedFiles();
+        HashMap<File, String> stagingArea =
+                readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        HashSet<File> removalArea =
+                readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        HashSet<String> untrackedFileNames =
+                new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea,
+                        trackedFilesInCurrentCommit, removalArea)));
 
         /* 3rd step of gitlet-design.md. */
-        checkOutAllTheFilesTrackedByTheGivenCommit(trackedFilesInCheckedOutCommit, untrackedFileNames);
+        checkOutAllTheFilesTrackedByTheGivenCommit(trackedFilesInCheckedOutCommit,
+                untrackedFileNames);
 
         /* 4th step of gitlet-design.md. */
-        removesTrackedFilesThatAreNotPresentInThatCommit(trackedFilesInCurrentCommit, trackedFilesInCheckedOutCommit);
+        removesTrackedFilesThatAreNotPresentInThatCommit(trackedFilesInCurrentCommit,
+                trackedFilesInCheckedOutCommit);
 
         /* 5th step of gitlet-design.md. */
         resetStagingArea();
-        writeContents(join(BRANCHES_DIR, readContentsAsString(HEAD)), sha1(serialize(searchCommitByUID(commitId)))); //Do not save commitId since it might be shortened.
+        writeContents(join(BRANCHES_DIR, readContentsAsString(HEAD)),
+                sha1(serialize(searchCommitByUID(commitId))));
+        //Do not save commitId since it might be shortened.
     }
 
     /**
@@ -678,12 +714,15 @@ public class Repository {
      * @param trackedFilesInCheckedOutCommit tracked files in checked out commit
      * @param untrackedFileNames untracked file names
      */
-    private static void checkOutAllTheFilesTrackedByTheGivenCommit(TreeMap<File, String> trackedFilesInCheckedOutCommit, HashSet<String> untrackedFileNames) {
+    private static void checkOutAllTheFilesTrackedByTheGivenCommit(
+            TreeMap<File, String> trackedFilesInCheckedOutCommit,
+            HashSet<String> untrackedFileNames) {
         for (File checkedOutFile : trackedFilesInCheckedOutCommit.keySet()) {
             checkUntrackedFile(checkedOutFile, untrackedFileNames);
         }
         for (File checkedOutFile : trackedFilesInCheckedOutCommit.keySet()) {
-            checkOut(checkedOutFile.getName(), trackedFilesInCheckedOutCommit); //Should manipulate after making sure that all the error cases are impossible!
+            checkOut(checkedOutFile.getName(), trackedFilesInCheckedOutCommit);
+            //Should manipulate after making sure that all the error cases are impossible!
         }
     }
 
@@ -692,7 +731,9 @@ public class Repository {
      * @param trackedFilesInCurrentCommit tracked files in current commit
      * @param trackedFilesInCheckedOutCommit tracked files in checked out commit
      */
-    private static void removesTrackedFilesThatAreNotPresentInThatCommit(TreeMap<File, String> trackedFilesInCurrentCommit, TreeMap<File, String> trackedFilesInCheckedOutCommit) {
+    private static void removesTrackedFilesThatAreNotPresentInThatCommit(
+            TreeMap<File, String> trackedFilesInCurrentCommit,
+            TreeMap<File, String> trackedFilesInCheckedOutCommit) {
         for (File currentTrackedFile : trackedFilesInCurrentCommit.keySet()) {
             if (!trackedFilesInCheckedOutCommit.containsKey(currentTrackedFile)) {
                 restrictedDelete(currentTrackedFile);
@@ -714,7 +755,8 @@ public class Repository {
 
         /* 2nd step of gitlet-design.md. */
         Commit currentCommit = searchCurrentCommit();
-        Commit givenBranchHeads = searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName)));
+        Commit givenBranchHeads =
+                searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName)));
         Commit splitPoint = getSplitPoint(givenBranchHeads, currentCommit);
         if (sha1(serialize(splitPoint)).equals(sha1(serialize(givenBranchHeads)))) {
             message("Given branch is an ancestor of the current branch.");
@@ -727,13 +769,18 @@ public class Repository {
 
         /* 3rd step of gitlet-design.md. */
         TreeMap<File, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
-        TreeMap<File, String> givenBranchHeadsTrackedFiles = givenBranchHeads.getTrackedFiles();
+        TreeMap<File, String> givenBranchHeadsTrackedFiles =
+                givenBranchHeads.getTrackedFiles();
         TreeMap<File, String> splitPointTrackedFiles = splitPoint.getTrackedFiles();
-        checkUntrackedFile(currentCommitTrackedFiles, givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
-        boolean conflict = processMergingFiles(currentCommitTrackedFiles, givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
+        checkUntrackedFile(currentCommitTrackedFiles,
+                givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
+        boolean conflict = processMergingFiles(currentCommitTrackedFiles,
+                givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
 
         /* 4th step of gitlet-design.md. */
-        commit("Merged " + branchName + " into " + readContentsAsString(HEAD) + ".", true, givenBranchHeads);
+        commit("Merged " + branchName + " into "
+                + readContentsAsString(HEAD) + ".", true,
+                givenBranchHeads);
         if (conflict) {
             System.out.println("Encountered a merge conflict.");
         }
@@ -743,7 +790,8 @@ public class Repository {
      * Check if there are staged files.
      */
     private static void checkStagedAdditionsOrRemovals() {
-        if (!readObject(STAGED_FOR_ADDITIONS, HashMap.class).isEmpty() || !readObject(STAGED_FOR_REMOVAL, HashSet.class).isEmpty()) {
+        if (!readObject(STAGED_FOR_ADDITIONS, HashMap.class).isEmpty()
+                || !readObject(STAGED_FOR_REMOVAL, HashSet.class).isEmpty()) {
             message("You have uncommitted changes.");
             System.exit(0);
         }
@@ -782,7 +830,8 @@ public class Repository {
     private static Commit getSplitPoint(Commit commit1, Commit commit2) {
         HashSet<String> ancestorsOfCommit1 = new HashSet<>();
         addToSet(sha1(serialize(commit1)), ancestorsOfCommit1);
-        return findSplitPointBasedOnAncestorsOfCommit1(sha1(serialize(commit2)), ancestorsOfCommit1);
+        return findSplitPointBasedOnAncestorsOfCommit1(sha1(serialize(commit2)),
+                ancestorsOfCommit1);
     }
 
     /**
@@ -814,7 +863,9 @@ public class Repository {
      * @param ancestorsOfCommit1 ancestors of commit1
      * @return commit1's nearest ancestor to commit2
      */
-    private static Commit findSplitPointBasedOnAncestorsOfCommit1(String commitUID, HashSet<String> ancestorsOfCommit1) {
+    private static Commit findSplitPointBasedOnAncestorsOfCommit1(
+            String commitUID,
+            HashSet<String> ancestorsOfCommit1) {
         HashSet<String> explored = new HashSet<>();
         Deque<String> fringe = new ArrayDeque<>();
         fringe.add(commitUID);
@@ -828,7 +879,8 @@ public class Repository {
             if (!explored.contains(currentCommit.getParentsUID1())) {
                 fringe.add(currentCommit.getParentsUID1());
             }
-            if (currentCommit.getParentsUID2() != null && !explored.contains(currentCommit.getParentsUID2())) {
+            if (currentCommit.getParentsUID2() != null
+                    && !explored.contains(currentCommit.getParentsUID2())) {
                 fringe.add(currentCommit.getParentsUID2());
             }
         }
@@ -842,16 +894,33 @@ public class Repository {
      * @param splitPointTrackedFiles split point tracked files
      * @return whether there are conflicts
      */
-    private static boolean processMergingFiles(TreeMap<File, String> currentCommitTrackedFiles, TreeMap<File, String> givenBranchHeadsTrackedFiles, TreeMap<File, String> splitPointTrackedFiles) {
+    private static boolean processMergingFiles(TreeMap<File, String>
+                                                       currentCommitTrackedFiles,
+                                               TreeMap<File, String>
+                                                       givenBranchHeadsTrackedFiles,
+                                               TreeMap<File, String>
+                                                       splitPointTrackedFiles) {
         boolean conflict = false;
 
         List<String> filesInCWD = plainFilenamesIn(CWD);
         for (String fileInCWD : filesInCWD) {
             File file = join(CWD, fileInCWD);
 
-            boolean unModifiedInTheCurrentBranch = currentCommitTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && Objects.equals(currentCommitTrackedFiles.get(file), splitPointTrackedFiles.get(file));
-            boolean modifiedInTheCurrentBranch = currentCommitTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(currentCommitTrackedFiles.get(file), splitPointTrackedFiles.get(file));
-            boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(givenBranchHeadsTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+            boolean unModifiedInTheCurrentBranch =
+                    currentCommitTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && Objects.equals(currentCommitTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
+            boolean modifiedInTheCurrentBranch =
+                    currentCommitTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(currentCommitTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
+            boolean modifiedInTheGivenBranch =
+                    givenBranchHeadsTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
 
             /* Case 1. */
             if (modifiedInTheGivenBranch && unModifiedInTheCurrentBranch) {
@@ -861,34 +930,62 @@ public class Repository {
             }
 
             /* Case 6. */
-            if (unModifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file)) {
+            if (unModifiedInTheCurrentBranch &&
+                    !givenBranchHeadsTrackedFiles.containsKey(file)) {
                 rm(fileInCWD);
                 continue;
             }
 
             /* Case 8. */
-            boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch && modifiedInTheGivenBranch && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
-            boolean oneChangedTheOtherDeleted = modifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file);
-            boolean fileAbsentAtTheSplitPointAndHasDifferentContents = !splitPointTrackedFiles.containsKey(file) && currentCommitTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
-            boolean modifiedInDifferentWays = changedAndDifferentFromOther || oneChangedTheOtherDeleted ||fileAbsentAtTheSplitPointAndHasDifferentContents;
+            boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch
+                    && modifiedInTheGivenBranch
+                    && !Objects.equals(currentCommitTrackedFiles.get(file),
+                    givenBranchHeadsTrackedFiles.get(file));
+            boolean oneChangedTheOtherDeleted = modifiedInTheCurrentBranch
+                    && !givenBranchHeadsTrackedFiles.containsKey(file);
+            boolean fileAbsentAtTheSplitPointAndHasDifferentContents =
+                    !splitPointTrackedFiles.containsKey(file) &&
+                            currentCommitTrackedFiles.containsKey(file)
+                            && givenBranchHeadsTrackedFiles.containsKey(file)
+                            && !Objects.equals(currentCommitTrackedFiles.get(file),
+                            givenBranchHeadsTrackedFiles.get(file));
+            boolean modifiedInDifferentWays = changedAndDifferentFromOther
+                    || oneChangedTheOtherDeleted
+                    || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
                 conflict = true;
                 if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>\n");
+                    writeContents(file, "<<<<<<< HEAD\n",
+                            readContents(join(BLOBS_DIR,
+                                    currentCommitTrackedFiles.get(file))),
+                            "=======\n", ">>>>>>>\n");
                 } else if (!currentCommitTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
+                    writeContents(file, "<<<<<<< HEAD\n",
+                            "=======\n", readContents(join(BLOBS_DIR,
+                                    givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
                 } else {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
+                    writeContents(file, "<<<<<<< HEAD\n",
+                            readContents(join(BLOBS_DIR,
+                                    currentCommitTrackedFiles.get(file))),
+                            "=======\n", readContents(join(BLOBS_DIR,
+                                    givenBranchHeadsTrackedFiles.get(file))),
+                            ">>>>>>>\n");
                 }
                 add(fileInCWD);
             }
         }
 
         for (File file : givenBranchHeadsTrackedFiles.keySet()) {
-            boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(givenBranchHeadsTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+            boolean modifiedInTheGivenBranch =
+                    givenBranchHeadsTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
 
             /* Case 5. */
-            if (!splitPointTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !currentCommitTrackedFiles.containsKey(file)) {
+            if (!splitPointTrackedFiles.containsKey(file) &&
+                    givenBranchHeadsTrackedFiles.containsKey(file)
+                    && !currentCommitTrackedFiles.containsKey(file)) {
                 checkOut(file.getName(), givenBranchHeadsTrackedFiles);
                 add(file.getName());
                 continue;
@@ -898,11 +995,23 @@ public class Repository {
             if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
                 conflict = true;
                 if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>\n");
+                    writeContents(file, "<<<<<<< HEAD\n",
+                            readContents(join(BLOBS_DIR,
+                                    currentCommitTrackedFiles.get(file))),
+                            "=======\n", ">>>>>>>\n");
                 } else if (!currentCommitTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
+                    writeContents(file, "<<<<<<< HEAD\n",
+                            "=======\n",
+                            readContents(join(BLOBS_DIR,
+                                    givenBranchHeadsTrackedFiles.get(file))),
+                            ">>>>>>>\n");
                 } else {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
+                    writeContents(file, "<<<<<<< HEAD\n",
+                            readContents(join(BLOBS_DIR,
+                                    currentCommitTrackedFiles.get(file))),
+                            "=======\n", readContents(join(BLOBS_DIR,
+                                    givenBranchHeadsTrackedFiles.get(file))),
+                            ">>>>>>>\n");
                 }
                 add(file.getName());
             }
@@ -911,18 +1020,36 @@ public class Repository {
         return conflict;
     }
 
-    private static void checkUntrackedFile(TreeMap<File, String> currentCommitTrackedFiles, TreeMap<File, String> givenBranchHeadsTrackedFiles, TreeMap<File, String> splitPointTrackedFiles) {
-        HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
-        HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
-        HashSet<String> untrackedFileNames = new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea, currentCommitTrackedFiles, removalArea)));
+    private static void checkUntrackedFile(TreeMap<File, String> currentCommitTrackedFiles,
+                                           TreeMap<File, String> givenBranchHeadsTrackedFiles,
+                                           TreeMap<File, String> splitPointTrackedFiles) {
+        HashMap<File, String> stagingArea =
+                readObject(STAGED_FOR_ADDITIONS, HashMap.class);
+        HashSet<File> removalArea =
+                readObject(STAGED_FOR_REMOVAL, HashSet.class);
+        HashSet<String> untrackedFileNames =
+                new HashSet<>(Arrays.asList(searchUntrackedFilesNames(stagingArea,
+                        currentCommitTrackedFiles, removalArea)));
 
         List<String> filesInCWD = plainFilenamesIn(CWD);
         for (String fileInCWD : filesInCWD) {
             File file = join(CWD, fileInCWD);
 
-            boolean unModifiedInTheCurrentBranch = currentCommitTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && Objects.equals(currentCommitTrackedFiles.get(file), splitPointTrackedFiles.get(file));
-            boolean modifiedInTheCurrentBranch = currentCommitTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(currentCommitTrackedFiles.get(file), splitPointTrackedFiles.get(file));
-            boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(givenBranchHeadsTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+            boolean unModifiedInTheCurrentBranch =
+                    currentCommitTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && Objects.equals(currentCommitTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
+            boolean modifiedInTheCurrentBranch =
+                    currentCommitTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(currentCommitTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
+            boolean modifiedInTheGivenBranch =
+                    givenBranchHeadsTrackedFiles.containsKey(file)
+                            && splitPointTrackedFiles.containsKey(file)
+                            && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
+                            splitPointTrackedFiles.get(file));
 
             /* Case 1. */
             if (modifiedInTheGivenBranch && unModifiedInTheCurrentBranch) {
@@ -930,25 +1057,42 @@ public class Repository {
             }
 
             /* Case 6. */
-            if (unModifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file)) {
+            if (unModifiedInTheCurrentBranch
+                    && !givenBranchHeadsTrackedFiles.containsKey(file)) {
                 checkUntrackedFile(file, untrackedFileNames);
             }
 
             /* Case 8. */
-            boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch && modifiedInTheGivenBranch && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
-            boolean oneChangedTheOtherDeleted = modifiedInTheCurrentBranch && !givenBranchHeadsTrackedFiles.containsKey(file);
-            boolean fileAbsentAtTheSplitPointAndHasDifferentContents = !splitPointTrackedFiles.containsKey(file) && currentCommitTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !Objects.equals(currentCommitTrackedFiles.get(file), givenBranchHeadsTrackedFiles.get(file));
-            boolean modifiedInDifferentWays = changedAndDifferentFromOther || oneChangedTheOtherDeleted ||fileAbsentAtTheSplitPointAndHasDifferentContents;
+            boolean changedAndDifferentFromOther = modifiedInTheCurrentBranch
+                    && modifiedInTheGivenBranch
+                    && !Objects.equals(currentCommitTrackedFiles.get(file),
+                    givenBranchHeadsTrackedFiles.get(file));
+            boolean oneChangedTheOtherDeleted = modifiedInTheCurrentBranch
+                    && !givenBranchHeadsTrackedFiles.containsKey(file);
+            boolean fileAbsentAtTheSplitPointAndHasDifferentContents
+                    = !splitPointTrackedFiles.containsKey(file)
+                    && currentCommitTrackedFiles.containsKey(file)
+                    && givenBranchHeadsTrackedFiles.containsKey(file)
+                    && !Objects.equals(currentCommitTrackedFiles.get(file),
+                    givenBranchHeadsTrackedFiles.get(file));
+            boolean modifiedInDifferentWays = changedAndDifferentFromOther
+                    || oneChangedTheOtherDeleted
+                    || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
                 checkUntrackedFile(file, untrackedFileNames);
             }
         }
 
         for (File file : givenBranchHeadsTrackedFiles.keySet()) {
-            boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file) && splitPointTrackedFiles.containsKey(file) && !Objects.equals(givenBranchHeadsTrackedFiles.get(file), splitPointTrackedFiles.get(file));
+            boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file)
+                    && splitPointTrackedFiles.containsKey(file)
+                    && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
+                    splitPointTrackedFiles.get(file));
 
             /* Case 5. */
-            if (!splitPointTrackedFiles.containsKey(file) && givenBranchHeadsTrackedFiles.containsKey(file) && !currentCommitTrackedFiles.containsKey(file)) {
+            if (!splitPointTrackedFiles.containsKey(file)
+                    && givenBranchHeadsTrackedFiles.containsKey(file)
+                    && !currentCommitTrackedFiles.containsKey(file)) {
                 checkUntrackedFile(file, untrackedFileNames);
             }
 
@@ -959,9 +1103,11 @@ public class Repository {
         }
     }
 
-    private static void checkUntrackedFile(File checkedOutFile, HashSet<String> untrackedFileNames) {
+    private static void checkUntrackedFile(File checkedOutFile,
+                                           HashSet<String> untrackedFileNames) {
         if (checkedOutFile.exists() && untrackedFileNames.contains(checkedOutFile.getName())) {
-            message("There is an untracked file in the way; delete it, or add and commit it first.");
+            message("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
             System.exit(0);
         }
     }

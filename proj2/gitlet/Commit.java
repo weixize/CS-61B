@@ -1,15 +1,13 @@
 package gitlet;
 
-// TODO: any imports you need here
 import static gitlet.Utils.*;
 import static gitlet.Repository.*;
 import java.io.File;
 import java.io.Serializable;
-import java.util.Date; // TODO: You'll likely use this in this class
+import java.util.Date;
 import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *  This class represents a commit.
  *  It should be serializable so that it can be put into the 'commits' folder.
@@ -18,7 +16,6 @@ import java.util.TreeMap;
  */
 public class Commit implements Serializable {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
@@ -43,7 +40,6 @@ public class Commit implements Serializable {
 
 
 
-    /* TODO: fill in the rest of this class. */
     /**
      * Initial commit
      * Invoked by Repository.init()
@@ -93,7 +89,9 @@ public class Commit implements Serializable {
      * @param parentsUID2 UID of parent commit II
      * @param trackedFiles non-metadata
      */
-    public Commit(String msg, String parentsUID1, String parentsUID2, TreeMap<File, String> trackedFiles) {
+    public Commit(String msg, String parentsUID1,
+                  String parentsUID2,
+                  TreeMap<File, String> trackedFiles) {
         message = msg;
         date = new Date();
         parent1 = null;
@@ -109,11 +107,11 @@ public class Commit implements Serializable {
 
     /**
      * Find the file named UID and read a Commit object from it.
-     * @param UID the name of the target file
+     * @param uid the name of the target file
      * @return the desired Commit object
      */
-    public static Commit fromFile(String UID) {
-        return readObject(join(COMMITS_DIR, UID), Commit.class);
+    public static Commit fromFile(String uid) {
+        return readObject(join(COMMITS_DIR, uid), Commit.class);
     }
 
     public Date getDate() {
