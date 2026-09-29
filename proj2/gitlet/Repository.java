@@ -877,11 +877,11 @@ public class Repository {
             if (modifiedInDifferentWays) {
                 conflict = true;
                 if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>");
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>\n");
                 } else if (!currentCommitTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
                 } else {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
                 }
                 add(fileInCWD);
             }
@@ -901,11 +901,11 @@ public class Repository {
             if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
                 conflict = true;
                 if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>");
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", ">>>>>>>\n");
                 } else if (!currentCommitTrackedFiles.containsKey(file)) {
-                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                    writeContents(file, "<<<<<<< HEAD\n", "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
                 } else {
-                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>");
+                    writeContents(file, "<<<<<<< HEAD\n", readContents(join(BLOBS_DIR, currentCommitTrackedFiles.get(file))), "=======\n", readContents(join(BLOBS_DIR, givenBranchHeadsTrackedFiles.get(file))), ">>>>>>>\n");
                 }
                 add(file.getName());
             }
