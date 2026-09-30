@@ -386,7 +386,6 @@ public class Repository {
      */
     public static void status() {
         checkInitialized();
-
         /* Branches. */
         System.out.println("=== Branches ===");
         String headBranch = readContentsAsString(HEAD);
@@ -400,7 +399,6 @@ public class Repository {
             System.out.println(branchFileName);
         }
         System.out.println();
-
         /* Staged Files. */
         System.out.println("=== Staged Files ===");
         HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
@@ -411,7 +409,6 @@ public class Repository {
             i += 1;
         }
         sortAndPrint(stagedFileNames);
-
         /* Removed Files. */
         System.out.println("=== Removed Files ===");
         HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
@@ -422,7 +419,6 @@ public class Repository {
             j += 1;
         }
         sortAndPrint(fileNames);
-
         /* Modifications Not Staged For Commit. */
         System.out.println("=== Modifications Not Staged For Commit ===");
         TreeMap<String, String> currentTrackedFiles = searchCurrentCommit().getTrackedFiles();
@@ -457,7 +453,6 @@ public class Repository {
             }
         }
         System.out.println();
-
         /* Untracked Files. */
         System.out.println("=== Untracked Files ===");
         String[] fileNamesArray = searchUntrackedFilesNames(stagingArea,
