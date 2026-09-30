@@ -111,6 +111,10 @@ public class Commit implements Serializable {
      * @return the desired Commit object
      */
     public static Commit fromFile(String uid) {
+        if (uid == null) {
+            return null;
+            // Should be null safe.
+        }
         return readObject(join(COMMITS_DIR, uid), Commit.class);
     }
 

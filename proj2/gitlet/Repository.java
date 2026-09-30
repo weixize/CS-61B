@@ -1232,6 +1232,7 @@ public class Repository {
                 break;
             }
             currentLocalHead = Commit.fromFile(currentLocalHead.getParentsUID1());
+            // fromFile can now deal with null parameter.
         }
         if (!isHistory) {
             message("Please pull down remote changes before pushing.");
@@ -1273,7 +1274,13 @@ public class Repository {
         checkRemoteBranch(remoteGitletDir, remoteBranchName);
 
         bfsFetch(remoteGitletDir, remoteBranchName);
-        writeContents(join(BRANCHES_DIR, remoteName + "/" + remoteBranchName), readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName)));
+
+        File remoteBranchesDir = join(BRANCHES_DIR, remoteName);
+        if (!remoteBranchesDir.exists()) {
+            remoteBranchesDir.mkdir();
+            // Make sure remote branch directory exists.
+        }
+        writeContents(join(remoteBranchesDir, remoteBranchName), readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName)));
     }
 
     private static void checkRemoteBranch(File remoteGitletDir, String remoteBranchName) {
@@ -1326,6 +1333,6 @@ public class Repository {
      */
     public static void pull(String remoteName, String remoteBranchName) {
         fetch(remoteName, remoteBranchName);
-        merge(remoteName + "/" + remoteBranchName);
+        merge(remoteName + File.separatorChar + remoteBranchName);
     }
 }
