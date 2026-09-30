@@ -103,6 +103,26 @@ Merges files from the given branch into the current branch.
 3. Process all the files in CWD based on the rules. **Check all possible untracked file manipulation before processing.**
 4. Make a merge commit.
 
+#### addRemote(String remoteName, String nameOfRemoteDirectory)
+
+Add remote, invoked by Main.java.
+
+#### rmRemote(String remoteName)
+
+Remove a remote, invoked by Main.java.
+
+#### push(String remoteName, String remoteBranchName)
+
+Attempts to append the current branch’s commits to the end of the given branch at the given remote, invoked by Main.java.
+
+#### fetch(String remoteName, String remoteBranchName)
+
+Brings down commits from the remote Gitlet repository into the local Gitlet repository, invoked By Main.java.
+
+#### pull(String remoteName, String remoteBranchName)
+
+Fetches branch [remote name]/[remote branch name] as for the fetch command, and then merges that fetch into the current branch, invoked by Main.java.
+
 ### Class 2: Commit.java
 
 This class represents a commit. It should be serializable so that it can be put into the 'commits' folder.
@@ -131,6 +151,8 @@ Find the file named UID and read a Commit object from it.
 
 ## Algorithms
 
+Runtime target achieved.
+
 ## Persistence
 
 The .gitlet folder includes:
@@ -151,3 +173,4 @@ The .gitlet folder includes:
 6. **Be careful using a HashMap when serializing! The order of things within the HashMap is non-deterministic. The solution is to use a TreeMap which will always have the same order.**
 7. When we want to read the content of a file in the tracked files map, we need to first assess whether this file exists or not, otherwise we might make readContent error.
 8. In the merging cases, there are lots of files that are not in CWD but still need checkout, so we need iterate over not only CWD files, but also givenBranchHeadsTrackedFiles, in order not to forget these files.
+9. ***Extremely important in Going Remote:*** tracked files map should choose String of the file name as the key instead of choosing the absolute path. Because different repos are in different location, their commits objects can not be co-used and shared if they choose a path to be the key. I did not realize this invariant until I finished going remote. So I spent tons of time to reconstruct my whole project. Please do not do like me:)

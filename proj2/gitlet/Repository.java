@@ -1,7 +1,5 @@
 package gitlet;
 
-import com.sun.source.tree.Tree;
-
 import java.io.File;
 import java.util.*;
 
@@ -430,7 +428,8 @@ public class Repository {
         TreeMap<String, String> currentTrackedFiles = searchCurrentCommit().getTrackedFiles();
         HashSet<String> targetFileNames = new HashSet<>();
         for (Map.Entry<String, String> entry : currentTrackedFiles.entrySet()) {
-            if (!removalArea.contains(join(CWD, entry.getKey())) && !join(CWD, entry.getKey()).exists()) {
+            if (!removalArea.contains(join(CWD, entry.getKey()))
+                    && !join(CWD, entry.getKey()).exists()) {
                 targetFileNames.add(join(CWD, entry.getKey()).getName());
             }
             if (join(CWD, entry.getKey()).exists()) {
@@ -1113,7 +1112,8 @@ public class Repository {
                     || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
                 conflict = true;
-                dealWithConflict(givenBranchHeadsTrackedFiles, join(CWD, file), currentCommitTrackedFiles);
+                dealWithConflict(givenBranchHeadsTrackedFiles, join(CWD, file),
+                        currentCommitTrackedFiles);
                 add(file);
             }
         }
@@ -1153,7 +1153,8 @@ public class Repository {
             /* Case 8. */
             if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
                 conflict = true;
-                dealWithConflict(givenBranchHeadsTrackedFiles, join(CWD, file), currentCommitTrackedFiles);
+                dealWithConflict(givenBranchHeadsTrackedFiles, join(CWD, file),
+                        currentCommitTrackedFiles);
                 add(file);
             }
         }
@@ -1191,7 +1192,8 @@ public class Repository {
     }
 
     /**
-     * Attempts to append the current branch’s commits to the end of the given branch at the given remote.
+     * Attempts to append the current branch’s commits
+     * to the end of the given branch at the given remote.
      * Invoked by Main.java.
      * @param remoteName the name of the remote repo
      * @param remoteBranchName the name of the remote branch
@@ -1202,16 +1204,21 @@ public class Repository {
         File remoteGitletDir = getRemoteGitletDir(remoteName);
         checkRemoteDir(remoteGitletDir);
 
-        /* If the Gitlet system on the remote machine exists but does not have the input branch, then simply add the branch to the remote Gitlet. */
+        /* If the Gitlet system on the remote machine exists
+        but does not have the input branch,
+        then simply add the branch to the remote Gitlet. */
         Commit currentCommit = searchCurrentCommit();
         if (!join(join(remoteGitletDir, "branches"), remoteBranchName).exists()) {
             addCommitToRemote(currentCommit, remoteGitletDir);
             addBlobsToRemote(currentCommit, remoteGitletDir);
-            writeContents(join(join(remoteGitletDir, "branches"), remoteBranchName), sha1(serialize(currentCommit)));
+            writeContents(join(join(remoteGitletDir, "branches"),
+                    remoteBranchName),
+                    sha1(serialize(currentCommit)));
             return;
         }
 
-        String remoteBranchesHead = readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName));
+        String remoteBranchesHead = readContentsAsString(join(join(remoteGitletDir,
+                "branches"), remoteBranchName));
         checkInTheHistoryOfLocalHead(currentCommit, remoteBranchesHead);
 
         while (!sha1(serialize(currentCommit)).equals(remoteBranchesHead)) {
@@ -1221,14 +1228,16 @@ public class Repository {
             // Do not forget to move the pointer!!!
         }
 
-        writeContents(join(join(remoteGitletDir, "branches"), remoteBranchName), sha1(serialize(searchCurrentCommit())));
+        writeContents(join(join(remoteGitletDir, "branches"), remoteBranchName),
+                sha1(serialize(searchCurrentCommit())));
     }
 
     private static File getRemoteGitletDir(String remoteName) {
         return join(CWD, readContentsAsString(join(REMOTES_DIR, remoteName)));
     }
 
-    private static void checkInTheHistoryOfLocalHead(Commit currentLocalHead, String remoteBranchesHead) {
+    private static void checkInTheHistoryOfLocalHead(Commit currentLocalHead,
+                                                     String remoteBranchesHead) {
         boolean isHistory = false;
         while (currentLocalHead != null) {
             if (sha1(serialize(currentLocalHead)).equals(remoteBranchesHead)) {
@@ -1252,7 +1261,8 @@ public class Repository {
     }
 
     private static void addCommitToRemote(Commit currentCommit, File remoteGitletDir) {
-        writeObject(join(join(remoteGitletDir, "commits"), sha1(serialize(currentCommit))), currentCommit);
+        writeObject(join(join(remoteGitletDir, "commits"),
+                sha1(serialize(currentCommit))), currentCommit);
     }
 
     private static void addBlobsToRemote(Commit currentCommit, File remoteGitletDir) {
@@ -1260,14 +1270,15 @@ public class Repository {
         for (String fileName : currentTrackedFiles.keySet()) {
             String blobName = currentTrackedFiles.get(fileName);
             if (!join(join(remoteGitletDir, "blobs"), blobName).exists()) {
-                writeContents(join(join(remoteGitletDir, "blobs"), blobName), readContents(join(BLOBS_DIR, blobName)));
+                writeContents(join(join(remoteGitletDir, "blobs"), blobName),
+                        readContents(join(BLOBS_DIR, blobName)));
             }
         }
     }
 
     /**
      * Brings down commits from the remote Gitlet repository into the local Gitlet repository.
-     * Invoked By Main.java
+     * Invoked By Main.java.
      * @param remoteName the name of the remote
      * @param remoteBranchName the given remote branch name
      */
@@ -1284,7 +1295,9 @@ public class Repository {
             remoteBranchesDir.mkdir();
             // Make sure remote branch directory exists.
         }
-        writeContents(join(remoteBranchesDir, remoteBranchName), readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName)));
+        writeContents(join(remoteBranchesDir, remoteBranchName),
+                readContentsAsString(join(join(remoteGitletDir, "branches"),
+                        remoteBranchName)));
     }
 
     private static void checkRemoteBranch(File remoteGitletDir, String remoteBranchName) {
@@ -1295,7 +1308,8 @@ public class Repository {
     }
 
     private static void bfsFetch(File remoteGitletDir, String remoteBranchName) {
-        String currentCommitId = readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName));
+        String currentCommitId = readContentsAsString(join(join(remoteGitletDir,
+                "branches"), remoteBranchName));
         HashSet<String> explored = new HashSet<>();
         Queue<String> fringe = new ArrayDeque<>();
         fringe.add(currentCommitId);
@@ -1305,15 +1319,19 @@ public class Repository {
 
             File localCommitFile = join(COMMITS_DIR, currentCommitId);
             if (!localCommitFile.exists()) {
-                writeContents(localCommitFile, readContents(join(join(remoteGitletDir, "commits"), currentCommitId)));
+                writeContents(localCommitFile, readContents(join(join(remoteGitletDir,
+                        "commits"), currentCommitId)));
             }
 
-            Commit currentCommit = readObject(join(join(remoteGitletDir, "commits"), currentCommitId), Commit.class);
+            Commit currentCommit = readObject(join(join(remoteGitletDir, "commits"),
+                    currentCommitId), Commit.class);
             TreeMap<String, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
             for (String fileName : currentCommitTrackedFiles.keySet()) {
                 String blobName = currentCommitTrackedFiles.get(fileName);
                 if (!join(BLOBS_DIR, blobName).exists()) {
-                    writeContents(join(BLOBS_DIR, blobName), readContents(join(join(remoteGitletDir, "blobs"), blobName)));
+                    writeContents(join(BLOBS_DIR, blobName),
+                            readContents(join(join(remoteGitletDir, "blobs"),
+                                    blobName)));
                 }
             }
 
