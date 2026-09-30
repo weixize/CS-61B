@@ -266,7 +266,7 @@ public class Repository {
         TreeMap<String, String> lastestTrackedFiles =
                 new TreeMap<>(currentCommit.getTrackedFiles());
         boolean staged = currentStagingArea.get(fileToBeRemoved) != null;
-        boolean trackedByHAEDCommit = lastestTrackedFiles.get(fileToBeRemoved) != null;
+        boolean trackedByHAEDCommit = lastestTrackedFiles.get(fileName) != null;
         if (!staged && !trackedByHAEDCommit) {
             message("No reason to remove the file.");
             System.exit(0);
@@ -623,7 +623,7 @@ public class Repository {
         String[] fileNamesInCWD = plainFilenamesIn(CWD).toArray(new String[0]);
         for (String fileNameInCWD : fileNamesInCWD) {
             if (!stagingArea.containsKey(join(CWD, fileNameInCWD))
-                    && !currentTrackedFiles.containsKey(join(CWD, fileNameInCWD))) {
+                    && !currentTrackedFiles.containsKey(fileNameInCWD)) {
                 untrackedFileNames.add(fileNameInCWD);
             }
             if (removalArea.contains(join(CWD, fileNameInCWD))
