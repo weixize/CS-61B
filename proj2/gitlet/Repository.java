@@ -103,8 +103,8 @@ public class Repository {
 
         /* 4th step of gitlet-design.md. */
         Commit currentCommit = searchCurrentCommit();
-        TreeMap<File, String> trackedFiles = currentCommit.getTrackedFiles();
-        if (Objects.equals(trackedFiles.get(file), sha1(readContents(file)))) {
+        TreeMap<String, String> trackedFiles = currentCommit.getTrackedFiles();
+        if (Objects.equals(trackedFiles.get(fileName), sha1(readContents(file)))) {
             removeSomethingInStagingArea(file, currentStagingArea);
             return;
         }
@@ -204,12 +204,16 @@ public class Repository {
 
         /* 2nd step of gitlet-design.md. */
         Commit lastestCommit = searchCurrentCommit();
-        TreeMap<File, String> lastestTrackedFiles =
+        TreeMap<String, String> lastestTrackedFiles =
                 new TreeMap<>(lastestCommit.getTrackedFiles());
         for (File file : currentRemovalArea) {
             lastestTrackedFiles.remove(file);
         }
-        lastestTrackedFiles.putAll(currentStagingArea);
+        HashMap<String, String> currentStaging = new HashMap<>();
+        for (File file : currentStagingArea.keySet()) {
+            currentStaging.put(file.getName(), currentStagingArea.get(file));
+        }
+        lastestTrackedFiles.putAll(currentStaging);
         resetStagingArea();
 
         /* 3rd step of gitlet-design.md. */
@@ -259,7 +263,7 @@ public class Repository {
         HashMap<File, String> currentStagingArea = readObject(STAGED_FOR_ADDITIONS,
                 HashMap.class);
         Commit currentCommit = searchCurrentCommit();
-        TreeMap<File, String> lastestTrackedFiles =
+        TreeMap<String, String> lastestTrackedFiles =
                 new TreeMap<>(currentCommit.getTrackedFiles());
         boolean staged = currentStagingArea.get(fileToBeRemoved) != null;
         boolean trackedByHAEDCommit = lastestTrackedFiles.get(fileToBeRemoved) != null;
@@ -423,17 +427,17 @@ public class Repository {
 
         /* Modifications Not Staged For Commit. */
         System.out.println("=== Modifications Not Staged For Commit ===");
-        TreeMap<File, String> currentTrackedFiles = searchCurrentCommit().getTrackedFiles();
+        TreeMap<String, String> currentTrackedFiles = searchCurrentCommit().getTrackedFiles();
         HashSet<String> targetFileNames = new HashSet<>();
-        for (Map.Entry<File, String> entry : currentTrackedFiles.entrySet()) {
-            if (!removalArea.contains(entry.getKey()) && !entry.getKey().exists()) {
-                targetFileNames.add(entry.getKey().getName());
+        for (Map.Entry<String, String> entry : currentTrackedFiles.entrySet()) {
+            if (!removalArea.contains(join(CWD, entry.getKey())) && !join(CWD, entry.getKey()).exists()) {
+                targetFileNames.add(join(CWD, entry.getKey()).getName());
             }
-            if (entry.getKey().exists()) {
-                if (!sha1(readContents(entry.getKey())).equals(entry.getValue())
-                        && !stagingArea.containsKey(entry.getKey())
-                        && !removalArea.contains(entry.getKey())) {
-                    targetFileNames.add(entry.getKey().getName());
+            if (join(CWD, entry.getKey()).exists()) {
+                if (!sha1(readContents(join(CWD, entry.getKey()))).equals(entry.getValue())
+                        && !stagingArea.containsKey(join(CWD, entry.getKey()))
+                        && !removalArea.contains(join(CWD, entry.getKey()))) {
+                    targetFileNames.add(join(CWD, entry.getKey()).getName());
                 }
             }
         }
@@ -482,7 +486,7 @@ public class Repository {
     public static void checkoutFileName(String fileName) {
         /* 1st step of gitlet-design.md. */
         checkInitialized();
-        TreeMap<File, String> trackedFiles = searchCurrentCommit().getTrackedFiles();
+        TreeMap<String, String> trackedFiles = searchCurrentCommit().getTrackedFiles();
         checkFileExists(fileName, trackedFiles);
 
         /* 2nd step of gitlet-design.md. */
@@ -497,7 +501,7 @@ public class Repository {
     public static void checkoutCommitIdFileName(String commitId, String fileName) {
         /* 1st step of gitlet-design.md. */
         checkInitialized();
-        TreeMap<File, String> trackedFiles = searchCommitByUID(commitId).getTrackedFiles();
+        TreeMap<String, String> trackedFiles = searchCommitByUID(commitId).getTrackedFiles();
         checkFileExists(fileName, trackedFiles);
 
         /* 2nd step of gitlet-design.md. */
@@ -514,10 +518,10 @@ public class Repository {
         checkBranch(branchName);
 
         /* 2nd step of gitlet-design.md. */
-        TreeMap<File, String> trackedFilesInCheckedOutBranch =
+        TreeMap<String, String> trackedFilesInCheckedOutBranch =
                 searchCommitByUID(readContentsAsString(join(BRANCHES_DIR, branchName)))
                         .getTrackedFiles();
-        TreeMap<File, String> trackedFilesInCurrentBranch =
+        TreeMap<String, String> trackedFilesInCurrentBranch =
                 searchCurrentCommit().getTrackedFiles();
         HashMap<File, String> stagingArea = readObject(STAGED_FOR_ADDITIONS, HashMap.class);
         HashSet<File> removalArea = readObject(STAGED_FOR_REMOVAL, HashSet.class);
@@ -545,8 +549,8 @@ public class Repository {
      * @param fileName the name of the given file
      * @param trackedFiles the files tracked in the given commit
      */
-    private static void checkFileExists(String fileName, TreeMap<File, String> trackedFiles) {
-        if (!trackedFiles.containsKey(join(CWD, fileName))) {
+    private static void checkFileExists(String fileName, TreeMap<String, String> trackedFiles) {
+        if (!trackedFiles.containsKey(fileName)) {
             message("File does not exist in that commit.");
             System.exit(0);
         }
@@ -599,9 +603,9 @@ public class Repository {
      * @param fileName the name of the to-be-checked-out file
      * @param trackedFiles the tracked files in given commit
      */
-    private static void checkOut(String fileName, TreeMap<File, String> trackedFiles) {
+    private static void checkOut(String fileName, TreeMap<String, String> trackedFiles) {
         File file = join(CWD, fileName);
-        writeContents(file, readContents(join(BLOBS_DIR, trackedFiles.get(file))));
+        writeContents(file, readContents(join(BLOBS_DIR, trackedFiles.get(fileName))));
     }
 
     /**
@@ -612,7 +616,7 @@ public class Repository {
      * @return a String array contains the names of all the untracked files in CWD
      */
     private static String[] searchUntrackedFilesNames(HashMap<File, String> stagingArea,
-                                                      TreeMap<File, String>
+                                                      TreeMap<String, String>
                                                               currentTrackedFiles,
                                                       HashSet<File> removalArea) {
         LinkedList<String> untrackedFileNames = new LinkedList<>();
@@ -687,9 +691,9 @@ public class Repository {
         checkInitialized();
 
         /* 2nd step of gitlet-design.md. */
-        TreeMap<File, String> trackedFilesInCheckedOutCommit =
+        TreeMap<String, String> trackedFilesInCheckedOutCommit =
                 searchCommitByUID(commitId).getTrackedFiles();
-        TreeMap<File, String> trackedFilesInCurrentCommit =
+        TreeMap<String, String> trackedFilesInCurrentCommit =
                 searchCurrentCommit().getTrackedFiles();
         HashMap<File, String> stagingArea =
                 readObject(STAGED_FOR_ADDITIONS, HashMap.class);
@@ -720,13 +724,14 @@ public class Repository {
      * @param untrackedFileNames untracked file names
      */
     private static void checkOutAllTheFilesTrackedByTheGivenCommit(
-            TreeMap<File, String> trackedFilesInCheckedOutCommit,
+            TreeMap<String, String> trackedFilesInCheckedOutCommit,
             HashSet<String> untrackedFileNames) {
-        for (File checkedOutFile : trackedFilesInCheckedOutCommit.keySet()) {
+        for (String checkedOutFileName : trackedFilesInCheckedOutCommit.keySet()) {
+            File checkedOutFile = join(CWD, checkedOutFileName);
             checkUntrackedFile(checkedOutFile, untrackedFileNames);
         }
-        for (File checkedOutFile : trackedFilesInCheckedOutCommit.keySet()) {
-            checkOut(checkedOutFile.getName(), trackedFilesInCheckedOutCommit);
+        for (String checkedOutFileName : trackedFilesInCheckedOutCommit.keySet()) {
+            checkOut(checkedOutFileName, trackedFilesInCheckedOutCommit);
             //Should manipulate after making sure that all the error cases are impossible!
         }
     }
@@ -737,9 +742,10 @@ public class Repository {
      * @param trackedFilesInCheckedOutCommit tracked files in checked out commit
      */
     private static void removesTrackedFilesThatAreNotPresentInThatCommit(
-            TreeMap<File, String> trackedFilesInCurrentCommit,
-            TreeMap<File, String> trackedFilesInCheckedOutCommit) {
-        for (File currentTrackedFile : trackedFilesInCurrentCommit.keySet()) {
+            TreeMap<String, String> trackedFilesInCurrentCommit,
+            TreeMap<String, String> trackedFilesInCheckedOutCommit) {
+        for (String currentTrackedFileName : trackedFilesInCurrentCommit.keySet()) {
+            File currentTrackedFile = join(CWD, currentTrackedFileName);
             if (!trackedFilesInCheckedOutCommit.containsKey(currentTrackedFile)) {
                 restrictedDelete(currentTrackedFile);
             }
@@ -773,10 +779,10 @@ public class Repository {
         }
 
         /* 3rd step of gitlet-design.md. */
-        TreeMap<File, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
-        TreeMap<File, String> givenBranchHeadsTrackedFiles =
+        TreeMap<String, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
+        TreeMap<String, String> givenBranchHeadsTrackedFiles =
                 givenBranchHeads.getTrackedFiles();
-        TreeMap<File, String> splitPointTrackedFiles = splitPoint.getTrackedFiles();
+        TreeMap<String, String> splitPointTrackedFiles = splitPoint.getTrackedFiles();
         checkUntrackedFile(currentCommitTrackedFiles,
                 givenBranchHeadsTrackedFiles, splitPointTrackedFiles);
         boolean conflict = processMergingFiles(currentCommitTrackedFiles,
@@ -899,11 +905,11 @@ public class Repository {
      * @param splitPointTrackedFiles split point tracked files
      * @return whether there are conflicts
      */
-    private static boolean processMergingFiles(TreeMap<File, String>
+    private static boolean processMergingFiles(TreeMap<String, String>
                                                        currentCommitTrackedFiles,
-                                               TreeMap<File, String>
+                                               TreeMap<String, String>
                                                        givenBranchHeadsTrackedFiles,
-                                               TreeMap<File, String>
+                                               TreeMap<String, String>
                                                        splitPointTrackedFiles) {
 
         boolean conflictFromCwdFiles = mergeCwdFiles(currentCommitTrackedFiles,
@@ -921,9 +927,9 @@ public class Repository {
      * @param givenBranchHeadsTrackedFiles given branch heads tracked files
      * @param splitPointTrackedFiles split point tracked files
      */
-    private static void checkUntrackedFile(TreeMap<File, String> currentCommitTrackedFiles,
-                                           TreeMap<File, String> givenBranchHeadsTrackedFiles,
-                                           TreeMap<File, String> splitPointTrackedFiles) {
+    private static void checkUntrackedFile(TreeMap<String, String> currentCommitTrackedFiles,
+                                           TreeMap<String, String> givenBranchHeadsTrackedFiles,
+                                           TreeMap<String, String> splitPointTrackedFiles) {
         HashMap<File, String> stagingArea =
                 readObject(STAGED_FOR_ADDITIONS, HashMap.class);
         HashSet<File> removalArea =
@@ -984,7 +990,8 @@ public class Repository {
             }
         }
 
-        for (File file : givenBranchHeadsTrackedFiles.keySet()) {
+        for (String fileName : givenBranchHeadsTrackedFiles.keySet()) {
+            File file = join(CWD, fileName);
             boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file)
                     && splitPointTrackedFiles.containsKey(file)
                     && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
@@ -1024,9 +1031,9 @@ public class Repository {
      * @param file the file being processed
      * @param currentCommitTrackedFiles current commit tracked files
      */
-    private static void dealWithConflict(TreeMap<File, String> givenBranchHeadsTrackedFiles,
+    private static void dealWithConflict(TreeMap<String, String> givenBranchHeadsTrackedFiles,
                                          File file,
-                                         TreeMap<File, String> currentCommitTrackedFiles) {
+                                         TreeMap<String, String> currentCommitTrackedFiles) {
         if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
             writeContents(file, "<<<<<<< HEAD\n",
                     readContents(join(BLOBS_DIR,
@@ -1055,9 +1062,9 @@ public class Repository {
      * @param givenBranchHeadsTrackedFiles given branch heads tracked files
      * @return  whether there are conflicts
      */
-    private static boolean mergeCwdFiles(TreeMap<File, String> currentCommitTrackedFiles,
-                                         TreeMap<File, String> splitPointTrackedFiles,
-                                         TreeMap<File, String> givenBranchHeadsTrackedFiles) {
+    private static boolean mergeCwdFiles(TreeMap<String, String> currentCommitTrackedFiles,
+                                         TreeMap<String, String> splitPointTrackedFiles,
+                                         TreeMap<String, String> givenBranchHeadsTrackedFiles) {
         boolean conflict = false;
         List<String> filesInCWD = plainFilenamesIn(CWD);
         for (String fileInCWD : filesInCWD) {
@@ -1125,14 +1132,15 @@ public class Repository {
      * @param givenBranchHeadsTrackedFiles given branch heads tracked files
      * @return  whether there are conflicts
      */
-    private static boolean mergeGivenBranchFiles(TreeMap<File, String>
+    private static boolean mergeGivenBranchFiles(TreeMap<String, String>
                                                          currentCommitTrackedFiles,
-                                                 TreeMap<File, String>
+                                                 TreeMap<String, String>
                                                          splitPointTrackedFiles,
-                                                 TreeMap<File, String>
+                                                 TreeMap<String, String>
                                                          givenBranchHeadsTrackedFiles) {
         boolean conflict = false;
-        for (File file : givenBranchHeadsTrackedFiles.keySet()) {
+        for (String fileName : givenBranchHeadsTrackedFiles.keySet()) {
+            File file = join(CWD, fileName);
             boolean modifiedInTheGivenBranch =
                     givenBranchHeadsTrackedFiles.containsKey(file)
                             && splitPointTrackedFiles.containsKey(file)
@@ -1252,8 +1260,9 @@ public class Repository {
     }
 
     private static void addBlobsToRemote(Commit currentCommit, File remoteGitletDir) {
-        TreeMap<File, String> currentTrackedFiles = currentCommit.getTrackedFiles();
-        for (File file : currentTrackedFiles.keySet()) {
+        TreeMap<String, String> currentTrackedFiles = currentCommit.getTrackedFiles();
+        for (String fileName : currentTrackedFiles.keySet()) {
+            File file = join(CWD, fileName);
             String blobName = currentTrackedFiles.get(file);
             if (!join(join(remoteGitletDir, "blobs"), blobName).exists()) {
                 writeContents(join(join(remoteGitletDir, "blobs"), blobName), readContents(join(BLOBS_DIR, blobName)));
@@ -1305,8 +1314,9 @@ public class Repository {
             }
 
             Commit currentCommit = readObject(join(join(remoteGitletDir, "commits"), currentCommitId), Commit.class);
-            TreeMap<File, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
-            for (File file : currentCommitTrackedFiles.keySet()) {
+            TreeMap<String, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
+            for (String fileName : currentCommitTrackedFiles.keySet()) {
+                File file = join(CWD, fileName);
                 String blobName = currentCommitTrackedFiles.get(file);
                 if (!join(BLOBS_DIR, blobName).exists()) {
                     writeContents(join(BLOBS_DIR, blobName), readContents(join(join(remoteGitletDir, "blobs"), blobName)));

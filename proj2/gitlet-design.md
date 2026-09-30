@@ -120,7 +120,7 @@ Serialize the commit to the target directory.
 
 Constructor for not-initial commits.
 
-#### Commit(String msg, String parentsUID1, String parentsUID2, TreeMap<File, String> trackedFiles)
+#### Commit(String msg, String parentsUID1, String parentsUID2, TreeMap<String, String> trackedFiles)
 
 Constructor for merge commits.
 

@@ -36,7 +36,7 @@ public class Commit implements Serializable {
     private String parentsUID1;
     private String parentsUID2;
     /** The contents of this commit, represented by a map. */
-    private TreeMap<File, String> trackedFiles;
+    private TreeMap<String, String> trackedFiles;
 
 
 
@@ -62,7 +62,7 @@ public class Commit implements Serializable {
         writeObject(commitFile, this);
     }
 
-    public TreeMap<File, String> getTrackedFiles() {
+    public TreeMap<String, String> getTrackedFiles() {
         return trackedFiles;
     }
 
@@ -72,7 +72,7 @@ public class Commit implements Serializable {
      * @param parentsUID1 UID of parent commit I
      * @param trackedFiles non-metadata
      */
-    public Commit(String msg, String parentsUID1, TreeMap<File, String> trackedFiles) {
+    public Commit(String msg, String parentsUID1, TreeMap<String, String> trackedFiles) {
         message = msg;
         date = new Date();
         parent1 = null;
@@ -91,7 +91,7 @@ public class Commit implements Serializable {
      */
     public Commit(String msg, String parentsUID1,
                   String parentsUID2,
-                  TreeMap<File, String> trackedFiles) {
+                  TreeMap<String, String> trackedFiles) {
         message = msg;
         date = new Date();
         parent1 = null;
