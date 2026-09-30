@@ -1,5 +1,7 @@
 package gitlet;
 
+import com.sun.source.tree.Tree;
+
 import java.io.File;
 import java.util.*;
 
@@ -1258,19 +1260,20 @@ public class Repository {
         }
     }
 
+    /**
+     * Brings down commits from the remote Gitlet repository into the local Gitlet repository.
+     * Invoked By Main.java
+     * @param remoteName the name of the remote
+     * @param remoteBranchName the given remote branch name
+     */
     public static void fetch(String remoteName, String remoteBranchName) {
         checkInitialized();
         File remoteGitletDir = getRemoteGitletDir(remoteName);
         checkRemoteDir(remoteGitletDir);
         checkRemoteBranch(remoteGitletDir, remoteBranchName);
 
-        String currentRemoteCommit = readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName));
-        while (currentRemoteCommit != null) {
-            Commit remoteCommit = readObject(join(join(remoteGitletDir, "commits"), currentRemoteCommit), Commit.class);
-            addCommitToLocal(currentRemoteCommit);
-            addBlobsToLocal(currentRemoteCommit);
-            currentRemoteCommit = remoteCommit.getParentsUID1();
-        }
+        bfsFetch(remoteGitletDir, remoteBranchName);
+        writeContents(join(BRANCHES_DIR, remoteName + "/" + remoteBranchName), readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName)));
     }
 
     private static void checkRemoteBranch(File remoteGitletDir, String remoteBranchName) {
@@ -1278,5 +1281,51 @@ public class Repository {
             message("That remote does not have that branch.");
             System.exit(0);
         }
+    }
+
+    private static void bfsFetch(File remoteGitletDir, String remoteBranchName) {
+        String currentCommitId = readContentsAsString(join(join(remoteGitletDir, "branches"), remoteBranchName));
+        HashSet<String> explored = new HashSet<>();
+        Queue<String> fringe = new ArrayDeque<>();
+        fringe.add(currentCommitId);
+        while (!fringe.isEmpty()) {
+            currentCommitId = fringe.remove();
+            explored.add(currentCommitId);
+
+            File localCommitFile = join(COMMITS_DIR, currentCommitId);
+            if (!localCommitFile.exists()) {
+                writeContents(localCommitFile, readContents(join(join(remoteGitletDir, "commits"), currentCommitId)));
+            }
+
+            Commit currentCommit = readObject(join(join(remoteGitletDir, "commits"), currentCommitId), Commit.class);
+            TreeMap<File, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
+            for (File file : currentCommitTrackedFiles.keySet()) {
+                String blobName = currentCommitTrackedFiles.get(file);
+                if (!join(BLOBS_DIR, blobName).exists()) {
+                    writeContents(join(BLOBS_DIR, blobName), readContents(join(join(remoteGitletDir, "blobs"), blobName)));
+                }
+            }
+
+            String parent1 = currentCommit.getParentsUID1();
+            if (parent1 != null && !explored.contains(parent1)) {
+                fringe.add(parent1);
+            }
+            String parent2 = currentCommit.getParentsUID2();
+            if (parent2 != null && !explored.contains(parent2)) {
+                fringe.add(parent2);
+            }
+        }
+    }
+
+    /**
+     * Fetches branch [remote name]/[remote branch name] as for the fetch command,
+     * and then merges that fetch into the current branch.
+     * Invoked by Main.java.
+     * @param remoteName the name of the remote
+     * @param remoteBranchName the given remote branch name
+     */
+    public static void pull(String remoteName, String remoteBranchName) {
+        fetch(remoteName, remoteBranchName);
+        merge(remoteName + "/" + remoteBranchName);
     }
 }

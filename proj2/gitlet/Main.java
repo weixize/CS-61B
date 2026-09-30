@@ -98,6 +98,10 @@ public class Main {
                 checkOperandsNumbers(args, 3);
                 Repository.fetch(args[1], args[2]);
                 break;
+            case "pull":
+                checkOperandsNumbers(args, 3);
+                Repository.pull(args[1], args[2]);
+                break;
             default:
                 message("No command with that name exists.");
                 System.exit(0);
