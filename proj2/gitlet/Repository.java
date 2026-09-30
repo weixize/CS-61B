@@ -1217,6 +1217,8 @@ public class Repository {
         while (!sha1(serialize(currentCommit)).equals(remoteBranchesHead)) {
             addCommitToRemote(currentCommit, remoteGitletDir);
             addBlobsToRemote(currentCommit, remoteGitletDir);
+            currentCommit = Commit.fromFile(currentCommit.getParentsUID1());
+            // Do not forget to move the pointer!!!
         }
 
         writeContents(join(join(remoteGitletDir, "branches"), remoteBranchName), sha1(serialize(searchCurrentCommit())));
