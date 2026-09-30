@@ -988,8 +988,7 @@ public class Repository {
             }
         }
 
-        for (String fileName : givenBranchHeadsTrackedFiles.keySet()) {
-            File file = join(CWD, fileName);
+        for (String file : givenBranchHeadsTrackedFiles.keySet()) {
             boolean modifiedInTheGivenBranch = givenBranchHeadsTrackedFiles.containsKey(file)
                     && splitPointTrackedFiles.containsKey(file)
                     && !Objects.equals(givenBranchHeadsTrackedFiles.get(file),
@@ -999,12 +998,12 @@ public class Repository {
             if (!splitPointTrackedFiles.containsKey(file)
                     && givenBranchHeadsTrackedFiles.containsKey(file)
                     && !currentCommitTrackedFiles.containsKey(file)) {
-                checkUntrackedFile(file, untrackedFileNames);
+                checkUntrackedFile(join(CWD, file), untrackedFileNames);
             }
 
             /* Case 8. */
             if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
-                checkUntrackedFile(file, untrackedFileNames);
+                checkUntrackedFile(join(CWD, file), untrackedFileNames);
             }
         }
     }
@@ -1032,23 +1031,23 @@ public class Repository {
     private static void dealWithConflict(TreeMap<String, String> givenBranchHeadsTrackedFiles,
                                          File file,
                                          TreeMap<String, String> currentCommitTrackedFiles) {
-        if (!givenBranchHeadsTrackedFiles.containsKey(file)) {
+        if (!givenBranchHeadsTrackedFiles.containsKey(file.getName())) {
             writeContents(file, "<<<<<<< HEAD\n",
                     readContents(join(BLOBS_DIR,
-                            currentCommitTrackedFiles.get(file))),
+                            currentCommitTrackedFiles.get(file.getName()))),
                     "=======\n", ">>>>>>>\n");
-        } else if (!currentCommitTrackedFiles.containsKey(file)) {
+        } else if (!currentCommitTrackedFiles.containsKey(file.getName())) {
             writeContents(file, "<<<<<<< HEAD\n",
                     "=======\n",
                     readContents(join(BLOBS_DIR,
-                            givenBranchHeadsTrackedFiles.get(file))),
+                            givenBranchHeadsTrackedFiles.get(file.getName()))),
                     ">>>>>>>\n");
         } else {
             writeContents(file, "<<<<<<< HEAD\n",
                     readContents(join(BLOBS_DIR,
-                            currentCommitTrackedFiles.get(file))),
+                            currentCommitTrackedFiles.get(file.getName()))),
                     "=======\n", readContents(join(BLOBS_DIR,
-                            givenBranchHeadsTrackedFiles.get(file))),
+                            givenBranchHeadsTrackedFiles.get(file.getName()))),
                     ">>>>>>>\n");
         }
     }
@@ -1065,9 +1064,7 @@ public class Repository {
                                          TreeMap<String, String> givenBranchHeadsTrackedFiles) {
         boolean conflict = false;
         List<String> filesInCWD = plainFilenamesIn(CWD);
-        for (String fileInCWD : filesInCWD) {
-            File file = join(CWD, fileInCWD);
-
+        for (String file : filesInCWD) {
             boolean unModifiedInTheCurrentBranch =
                     currentCommitTrackedFiles.containsKey(file)
                             && splitPointTrackedFiles.containsKey(file)
@@ -1086,15 +1083,15 @@ public class Repository {
 
             /* Case 1. */
             if (modifiedInTheGivenBranch && unModifiedInTheCurrentBranch) {
-                checkOut(fileInCWD, givenBranchHeadsTrackedFiles);
-                add(fileInCWD);
+                checkOut(file, givenBranchHeadsTrackedFiles);
+                add(file);
                 continue;
             }
 
             /* Case 6. */
             if (unModifiedInTheCurrentBranch
                     && !givenBranchHeadsTrackedFiles.containsKey(file)) {
-                rm(fileInCWD);
+                rm(file);
                 continue;
             }
 
@@ -1116,8 +1113,8 @@ public class Repository {
                     || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
                 conflict = true;
-                dealWithConflict(givenBranchHeadsTrackedFiles, file, currentCommitTrackedFiles);
-                add(fileInCWD);
+                dealWithConflict(givenBranchHeadsTrackedFiles, join(CWD, file), currentCommitTrackedFiles);
+                add(file);
             }
         }
         return conflict;
@@ -1137,8 +1134,7 @@ public class Repository {
                                                  TreeMap<String, String>
                                                          givenBranchHeadsTrackedFiles) {
         boolean conflict = false;
-        for (String fileName : givenBranchHeadsTrackedFiles.keySet()) {
-            File file = join(CWD, fileName);
+        for (String file : givenBranchHeadsTrackedFiles.keySet()) {
             boolean modifiedInTheGivenBranch =
                     givenBranchHeadsTrackedFiles.containsKey(file)
                             && splitPointTrackedFiles.containsKey(file)
@@ -1149,16 +1145,16 @@ public class Repository {
             if (!splitPointTrackedFiles.containsKey(file)
                     && givenBranchHeadsTrackedFiles.containsKey(file)
                     && !currentCommitTrackedFiles.containsKey(file)) {
-                checkOut(file.getName(), givenBranchHeadsTrackedFiles);
-                add(file.getName());
+                checkOut(file, givenBranchHeadsTrackedFiles);
+                add(file);
                 continue;
             } // Should not in the loop above, while these files do not exist in CWD.
 
             /* Case 8. */
             if (modifiedInTheGivenBranch && !currentCommitTrackedFiles.containsKey(file)) {
                 conflict = true;
-                dealWithConflict(givenBranchHeadsTrackedFiles, file, currentCommitTrackedFiles);
-                add(file.getName());
+                dealWithConflict(givenBranchHeadsTrackedFiles, join(CWD, file), currentCommitTrackedFiles);
+                add(file);
             }
         }
         return conflict;
@@ -1260,8 +1256,7 @@ public class Repository {
     private static void addBlobsToRemote(Commit currentCommit, File remoteGitletDir) {
         TreeMap<String, String> currentTrackedFiles = currentCommit.getTrackedFiles();
         for (String fileName : currentTrackedFiles.keySet()) {
-            File file = join(CWD, fileName);
-            String blobName = currentTrackedFiles.get(file);
+            String blobName = currentTrackedFiles.get(fileName);
             if (!join(join(remoteGitletDir, "blobs"), blobName).exists()) {
                 writeContents(join(join(remoteGitletDir, "blobs"), blobName), readContents(join(BLOBS_DIR, blobName)));
             }
