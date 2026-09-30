@@ -939,9 +939,7 @@ public class Repository {
                         currentCommitTrackedFiles, removalArea)));
 
         List<String> filesInCWD = plainFilenamesIn(CWD);
-        for (String fileInCWD : filesInCWD) {
-            File file = join(CWD, fileInCWD);
-
+        for (String file : filesInCWD) {
             boolean unModifiedInTheCurrentBranch =
                     currentCommitTrackedFiles.containsKey(file)
                             && splitPointTrackedFiles.containsKey(file)
@@ -960,13 +958,13 @@ public class Repository {
 
             /* Case 1. */
             if (modifiedInTheGivenBranch && unModifiedInTheCurrentBranch) {
-                checkUntrackedFile(file, untrackedFileNames);
+                checkUntrackedFile(join(CWD, file), untrackedFileNames);
             }
 
             /* Case 6. */
             if (unModifiedInTheCurrentBranch
                     && !givenBranchHeadsTrackedFiles.containsKey(file)) {
-                checkUntrackedFile(file, untrackedFileNames);
+                checkUntrackedFile(join(CWD, file), untrackedFileNames);
             }
 
             /* Case 8. */
@@ -986,7 +984,7 @@ public class Repository {
                     || oneChangedTheOtherDeleted
                     || fileAbsentAtTheSplitPointAndHasDifferentContents;
             if (modifiedInDifferentWays) {
-                checkUntrackedFile(file, untrackedFileNames);
+                checkUntrackedFile(join(CWD, file), untrackedFileNames);
             }
         }
 
