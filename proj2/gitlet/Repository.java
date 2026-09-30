@@ -207,7 +207,7 @@ public class Repository {
         TreeMap<String, String> lastestTrackedFiles =
                 new TreeMap<>(lastestCommit.getTrackedFiles());
         for (File file : currentRemovalArea) {
-            lastestTrackedFiles.remove(file);
+            lastestTrackedFiles.remove(file.getName());
         }
         HashMap<String, String> currentStaging = new HashMap<>();
         for (File file : currentStagingArea.keySet()) {
@@ -746,7 +746,7 @@ public class Repository {
             TreeMap<String, String> trackedFilesInCheckedOutCommit) {
         for (String currentTrackedFileName : trackedFilesInCurrentCommit.keySet()) {
             File currentTrackedFile = join(CWD, currentTrackedFileName);
-            if (!trackedFilesInCheckedOutCommit.containsKey(currentTrackedFile)) {
+            if (!trackedFilesInCheckedOutCommit.containsKey(currentTrackedFileName)) {
                 restrictedDelete(currentTrackedFile);
             }
         }
@@ -1316,8 +1316,7 @@ public class Repository {
             Commit currentCommit = readObject(join(join(remoteGitletDir, "commits"), currentCommitId), Commit.class);
             TreeMap<String, String> currentCommitTrackedFiles = currentCommit.getTrackedFiles();
             for (String fileName : currentCommitTrackedFiles.keySet()) {
-                File file = join(CWD, fileName);
-                String blobName = currentCommitTrackedFiles.get(file);
+                String blobName = currentCommitTrackedFiles.get(fileName);
                 if (!join(BLOBS_DIR, blobName).exists()) {
                     writeContents(join(BLOBS_DIR, blobName), readContents(join(join(remoteGitletDir, "blobs"), blobName)));
                 }
